@@ -54,5 +54,9 @@ class ExtractorExtension(SingletonPlugin):
             controller='ckanext.extractor.controller:ExtractorController',
             action='show_extractor_config')
 
+        map.connect('/dataset/extractor/{id}/transformation_submit',
+            controller='ckanext.extractor.controller:ExtractorController',
+            action='extract_transformation')
+
         return map
         

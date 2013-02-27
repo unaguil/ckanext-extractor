@@ -6,11 +6,15 @@
   <xi:include href="../_util.html" />
 
   <div id="dataset" class="dataset">
-    <!-- Extra Metadata Section -->
     <h3>Extractor Configuration</h3>
     <div id="dataset-information">
-      
+      <form name="transformation_submission" method="post"
+      action="/dataset/extractor/${c.pkg.name}/transformation_submit"
+      enctype="multipart/form-data">
+        <input type="file" name="transformation_code" />
+        <input type="submit" name="submit" value="Submit" />
+      </form>
     </div>
-  </div> <!-- /dataset -->
+  </div>
 
 </html>
