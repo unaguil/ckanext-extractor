@@ -5,6 +5,10 @@ from logging import getLogger
 from ckan.controllers.package import PackageController
 from pylons import request
 
+import os.path
+import shutil
+from zipfile import ZipFile
+
 log = getLogger(__name__)
 
 class ExtractorController(PackageController):
@@ -24,8 +28,32 @@ class ExtractorController(PackageController):
     	 # using default functionality
         template = self.read(id)
 
-        log.info('Filename: %s ' request.params['transformation_code'].filename)
-        file = request.params['transformation_code'].file.read()
+        filename = request.params['transformation_code'].filename
+        submitted_file = request.params['transformation_code'].file
+
+        try:
+
+	        #create transformations directory if it does not exist
+	        if not os.path.isdir('transformations'):
+	        	log.info('Creating transformations directory')
+	        	os.mkdir('transformations')
+
+	        #delete package directory if it exists
+	        package_dir = os.path.join('transformations', id)
+	        if os.path.isdir(package_dir):
+	        	log.info('Deleting package directory %s' % package_dir)
+	        	shutil.rmtree(package_dir)
+
+	        #create directory again and change to it
+	        log.info('Creating package directory %s' % package_dir)
+	        os.mkdir(package_dir)
+	        os.chdir(package_dir)
+
+	        zipfile = ZipFile(submitted_file)
+	        log.info('Extracting file %s to directory %s' % (filename, package_dir))
+	        zipfile.extractall()
+        except Exception:
+        	c.extract_error = True
 
         #rendering using default template
     	return render('extractor/read.html')
