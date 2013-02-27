@@ -1,0 +1,2 @@
+recursive-include ckanext/extractor/theme/public/icons				*
+recursive-include ckanext/extractor/theme/templates/extractor		*
