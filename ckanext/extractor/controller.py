@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*- 
 
-from ckan.lib.base import render
+from ckan.lib.base import render, c
 from logging import getLogger
 from ckan.controllers.package import PackageController
 from pylons import request
@@ -18,6 +18,8 @@ class ExtractorController(PackageController):
 
         # using default functionality
         template = self.read(id)
+
+        c.error = False
 
         #rendering using default template
         return render('extractor/read.html')
@@ -53,7 +55,8 @@ class ExtractorController(PackageController):
 	        log.info('Extracting file %s to directory %s' % (filename, package_dir))
 	        zipfile.extractall()
         except Exception:
-        	c.extract_error = True
+        	c.error = True
+        	c.error_message = 'Problem handling uploaded file %s' % filename
 
         #rendering using default template
     	return render('extractor/read.html')

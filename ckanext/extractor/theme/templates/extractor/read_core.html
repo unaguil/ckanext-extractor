@@ -14,6 +14,10 @@
         <input type="file" name="transformation_code" />
         <input type="submit" name="submit" value="Submit" />
       </form>
+
+      <py:if test="c.error">
+        <b>${c.error_message}</b>
+      </py:if>
     </div>
   </div>
 
