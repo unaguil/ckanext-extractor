@@ -11,9 +11,12 @@
       <form name="transformation_submission" method="post"
       action="/dataset/extractor/${c.pkg.name}/transformation_submit"
       enctype="multipart/form-data">
+      <py:if test="c.data">      
         <b>Main Class:</b> <input type="text" name="mainclass" value="${c.mainclass}"/> <br/>
+        <b>Filename:</b> ${c.filename} <br/>
         <b>Timestamp:</b> ${c.timestamp} <br/>
         <br/>
+      </py:if>
         <input type="file" name="transformation_code" /> <br/>
         <br/>
         <input type="submit" name="submit" value="Submit" /> <br/>

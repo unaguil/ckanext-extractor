@@ -14,6 +14,19 @@ from model.transformation_model import Transformation
 log = getLogger(__name__)
 
 class ExtractorController(PackageController):
+
+    def get_transformation(self,id):
+        transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
+
+        if transformation is not None:
+            c.timestamp = transformation.timestamp.isoformat()
+            c.mainclass = transformation.mainclass
+            c.filename = transformation.filename
+            c.data = True
+        else:
+            c.data = False
+
+        return c
         
     def show_extractor_config(self, id):
         log.info('Showing extractor configuration for id: %s' % id)         
@@ -21,12 +34,9 @@ class ExtractorController(PackageController):
         # using default functionality
         template = self.read(id)
 
+        self.get_transformation(id)
+
         c.error = False
-
-        transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
-
-        c.timestamp = transformation.timestamp.isoformat()
-        c.mainclass = transformation.mainclass
 
         #rendering using default template
         return render('extractor/read.html')
@@ -65,13 +75,15 @@ class ExtractorController(PackageController):
 
             #insert data into database
             data = submitted_file.read()
-            transformation = Transformation(id, data, datetime.now(), 'lalalalal')
+            transformation = Transformation(id, filename, data, datetime.now(), 'lalalalal')
 
-            model.Session.add(transformation)
+            model.Session.merge(transformation)
             model.Session.commit()
             log.info("Transformation object stored for package '%s'" % id)
 
             c.error = False
+
+            self.get_transformation(id)
         except Exception as e:
             c.error = True
             c.error_message = 'Problem handling uploaded file %s (%s)' % (filename, e)
