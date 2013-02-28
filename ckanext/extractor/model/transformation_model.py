@@ -6,13 +6,13 @@ Base = declarative_base()
 class Transformation(Base):
     __tablename__ = 'transformations'
 
-    package_id = Column(String, primary_key=True)
+    package_name = Column(String, primary_key=True)
     code = Column(LargeBinary, nullable=False)
     timestamp = Column(DateTime, nullable=False)
     mainclass = Column(String, nullable=False)
 
     def __init__(self, package_name, code, timestamp, mainclass):
-        self.package_id = package_id
+        self.package_name = package_name
         self.code = code
         self.timestamp = timestamp
         self.mainclass = mainclass
