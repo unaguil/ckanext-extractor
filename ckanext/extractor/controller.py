@@ -49,6 +49,7 @@ class ExtractorController(PackageController):
 
         filename = request.params['transformation_code'].filename
         submitted_file = request.params['transformation_code'].file
+        mainclass = request.params['mainclass']
 
         try:
             #create transformations directory if it does not exist
@@ -75,7 +76,7 @@ class ExtractorController(PackageController):
 
             #insert data into database
             data = submitted_file.read()
-            transformation = Transformation(id, filename, data, datetime.now(), 'lalalalal')
+            transformation = Transformation(id, filename, data, datetime.now(), mainclass)
 
             model.Session.merge(transformation)
             model.Session.commit()
