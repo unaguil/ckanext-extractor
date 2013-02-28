@@ -23,6 +23,11 @@ class ExtractorController(PackageController):
 
         c.error = False
 
+        transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
+
+        c.timestamp = transformation.timestamp.isoformat()
+        c.mainclass = transformation.mainclass
+
         #rendering using default template
         return render('extractor/read.html')
 
