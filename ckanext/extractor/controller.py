@@ -34,7 +34,6 @@ class ExtractorController(PackageController):
         submitted_file = request.params['transformation_code'].file
 
         try:
-
 	        #create transformations directory if it does not exist
 	        if not os.path.isdir('transformations'):
 	        	log.info('Creating transformations directory')
