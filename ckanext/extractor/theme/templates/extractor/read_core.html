@@ -11,12 +11,17 @@
       <form name="transformation_submission" method="post"
       action="/dataset/extractor/${c.pkg.name}/transformation_submit"
       enctype="multipart/form-data">
+      <b>Main class:</b> <input type="text" name="mainclass" value="${c.mainclass}"/> <br/>
       <py:if test="c.data">      
-        <b>Main class:</b> <input type="text" name="mainclass" value="${c.mainclass}"/> <br/>
         <b>File name:</b> ${c.filename} <br/>
         <b>Time stamp:</b> ${c.timestamp} <br/>
-        <br/>
+        <py:choose>
+          <input py:when="c.enabled" type="checkbox" name="enabled" checked="true" />
+          <input py:otherwise="" type="checkbox" name="enabled" />
+        </py:choose> Enabled
       </py:if>
+
+        <br/>        
         <input type="file" name="transformation_code" /> <br/>
         <br/>
         <input type="submit" name="submit" value="Submit" /> <br/>
