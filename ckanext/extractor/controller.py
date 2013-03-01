@@ -56,7 +56,6 @@ class ExtractorController(PackageController):
         #read enabled status of transformation
         transformation.enabled = 'enabled' in request.params
             
-
         #get mainclass value
         if 'mainclass' in request.params:
             transformation.mainclass = request.params['mainclass']
