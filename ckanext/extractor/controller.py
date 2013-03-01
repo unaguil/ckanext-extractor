@@ -17,7 +17,6 @@ class ExtractorController(PackageController):
 
     def get_transformation_data(self,id):
         transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
-        print transformation
 
         if transformation is not None:
             c.timestamp = transformation.timestamp.isoformat()
@@ -52,6 +51,7 @@ class ExtractorController(PackageController):
         transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
         if transformation is None:
             transformation = Transformation(id)
+            print "Initial object created"
 
         #read enabled status of transformation
         transformation.enabled = 'enabled' in request.params
@@ -100,10 +100,7 @@ class ExtractorController(PackageController):
         model.Session.commit()
         log.info("Transformation object stored for package '%s'" % id)
 
-        c = self.get_transformation_data(id)
-        c.error = False
-
         #rendering using default template
-        return render('extractor/read.html')
+        return render('package/read.html')
 
 
