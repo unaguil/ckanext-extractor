@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*- 
+
 from ckan.lib.base import render, c, model
+from ckan.logic import get_action
 from logging import getLogger
 from ckan.controllers.package import PackageController
 from pylons import request
@@ -15,8 +17,8 @@ log = getLogger(__name__)
 
 class ExtractorController(PackageController):
 
-    def get_transformation_data(self,id):
-        transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
+    def get_transformation_data(self, id):
+        transformation = model.Session.query(Transformation).filter_by(package_id=id).first()
 
         if transformation is not None:
             c.timestamp = transformation.timestamp.isoformat()
@@ -35,7 +37,10 @@ class ExtractorController(PackageController):
         # using default functionality
         template = self.read(id)
 
-        self.get_transformation_data(id)
+        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
+        package_info = get_action('package_show')(context, {'id': c.pkg.id})
+
+        self.get_transformation_data(package_info['id'])
 
         c.error = False
 
@@ -48,9 +53,12 @@ class ExtractorController(PackageController):
          # using default functionality
         template = self.read(id)
 
-        transformation = model.Session.query(Transformation).filter_by(package_name=id).first()
+        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
+        package_info = get_action('package_show')(context, {'id': c.pkg.id})
+
+        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
         if transformation is None:
-            transformation = Transformation(id)
+            transformation = Transformation(package_info['id'])
             print "Initial object created"
 
         #read enabled status of transformation
@@ -93,7 +101,7 @@ class ExtractorController(PackageController):
                 log.info('File %s extracted' % transformation.filename)
             except Exception as e:
                 c.error = True
-                c.error_message = 'Problem handling uploaded file %s (%s)' % (transformation.filename, e)
+                c.error_message = 'Problem extracting uploaded file %s (%s)' % (transformation.filename, e)
                 return render('extractor/read.html')
 
         model.Session.merge(transformation)
