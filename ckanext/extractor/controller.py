@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*- 
 
-from ckan.lib.base import render, c, model
+from ckan.lib.base import render, c, model, response
 from ckan.logic import get_action
 from logging import getLogger
 from ckan.controllers.package import PackageController
@@ -59,7 +59,6 @@ class ExtractorController(PackageController):
         transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
         if transformation is None:
             transformation = Transformation(package_info['id'])
-            print "Initial object created"
 
         #read enabled status of transformation
         transformation.enabled = 'enabled' in request.params
@@ -95,6 +94,7 @@ class ExtractorController(PackageController):
                 zipfile.extractall()
 
                 #obtain data
+                submitted_file.seek(0)
                 transformation.data = submitted_file.read()
                 transformation.timestamp = datetime.now()
 
@@ -111,4 +111,22 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('package/read.html')
 
+    def download_transformation(self, id):
+        log.info('Dowloading transformation for id: %s' % id)
 
+        # using default functionality
+        template = self.read(id)
+
+        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
+        package_info = get_action('package_show')(context, {'id': c.pkg.id})
+
+        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
+        if transformation is not None:
+            response.status_int = 200
+            response.headers['Content-Type'] = 'application/octet-stream'
+            response.headers['Content-Disposition'] = 'attachment; filename="%s"' % transformation.filename
+            response.headers['Content-Length'] = len(transformation.data)
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+
+            return transformation.data
