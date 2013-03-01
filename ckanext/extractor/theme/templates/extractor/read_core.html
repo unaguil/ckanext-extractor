@@ -8,7 +8,7 @@
   <div id="dataset" class="dataset">
     <h3>Transformation Configuration</h3>
     <div id="dataset-information">
-      <form name="transformation_submission" method="post"
+      <form class="form-horizontal" name="transformation_submission" method="post"
       action="/dataset/extractor/${c.pkg.name}/transformation_submit"
       enctype="multipart/form-data">
 
@@ -45,8 +45,11 @@
         </div>
       </py:if>
 
-      <input type="file" name="transformation_code" /> <br/>
-      <input class="btn btn-primary" type="submit" name="submit" value="Submit" /> <br/>
+      <input type="file" name="transformation_code" />
+      <div class="form-actions">
+        <input class="btn btn-primary" type="submit" name="submit" value="Submit" />
+        <input id="cancel" class="btn href-action" name="cancel" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
+      </div>
     </form>
 
       <py:if test="c.error">
