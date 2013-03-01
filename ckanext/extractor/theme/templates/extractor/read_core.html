@@ -11,21 +11,43 @@
       <form name="transformation_submission" method="post"
       action="/dataset/extractor/${c.pkg.name}/transformation_submit"
       enctype="multipart/form-data">
-      <b>Main class:</b> <input type="text" name="mainclass" value="${c.mainclass}"/> <br/>
+
+      <div class="control-group">
+        <label class="control-label">Main Class</label>
+        <div class="controls">
+          <input class="js-title" type="text" name="mainclass" value="${c.mainclass}"/>
+        </div>
+      </div>
+
       <py:if test="c.data">      
-        <b>File name:</b> ${c.filename} <br/>
-        <b>Time stamp:</b> ${c.timestamp} <br/>
-        <py:choose>
-          <input py:when="c.enabled" type="checkbox" name="enabled" checked="true" />
-          <input py:otherwise="" type="checkbox" name="enabled" />
-        </py:choose> Enabled
+        <div class="control-group">
+          <label class="control-label">File Name</label>
+          <div class="controls">
+            ${c.filename}          
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Time Stamp</label>
+          <div class="controls">
+            ${c.timestamp}          
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Enabled</label>
+          <div class="controls">
+            <py:choose>
+              <input py:when="c.enabled" type="checkbox" name="enabled" checked="true" />
+              <input py:otherwise="" type="checkbox" name="enabled" />
+            </py:choose>
+          </div>
+        </div>
       </py:if>
 
-        <br/>        
-        <input type="file" name="transformation_code" /> <br/>
-        <br/>
-        <input type="submit" name="submit" value="Submit" /> <br/>
-      </form>
+      <input type="file" name="transformation_code" /> <br/>
+      <input class="btn btn-primary" type="submit" name="submit" value="Submit" /> <br/>
+    </form>
 
       <py:if test="c.error">
         <b>${c.error_message}</b>
