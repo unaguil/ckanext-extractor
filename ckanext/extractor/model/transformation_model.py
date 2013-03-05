@@ -30,8 +30,8 @@ class Extraction(Base):
     __tablename__ = 'extractions'
 
     id = Column(Integer, primary_key=True)
+    start_date = Column(DateTime, primary_key=True)
     transformation_id = Column(String, nullable=False)
-    start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime)
     context = Column(String, nullable=False)
     transformation_status = Column(String, nullable=False)
@@ -44,4 +44,4 @@ class Extraction(Base):
         self.transformation_status = transformation_status
 
     def __repr__(self):
-        return '<Extraction transformation_id: %s start_date: %s context: %s transformation_status: %s>' % (self.transformation_id, self.start_date, self.end_date, self.context, self.transformation_status)
+        return '<Extraction transformation_id: %s start_date: %s end_date: %s context: %s transformation_status: %s>' % (self.transformation_id, self.start_date, self.end_date, self.context, self.transformation_status)
