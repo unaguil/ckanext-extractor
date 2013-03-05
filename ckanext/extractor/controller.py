@@ -69,9 +69,9 @@ class ExtractorController(PackageController):
         transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
         if transformation is None:
             transformation = Transformation(package_info['id'])
-
-        #read enabled status of transformation
-        transformation.enabled = 'enabled' in request.params
+        else:
+            #read enabled status of transformation
+            transformation.enabled = 'enabled' in request.params
             
         #get mainclass value
         if 'mainclass' in request.params:
