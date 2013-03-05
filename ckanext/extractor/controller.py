@@ -6,16 +6,26 @@ from logging import getLogger
 from ckan.controllers.package import PackageController
 from pylons import request
 
+import sys
+import os
 import os.path
 import shutil
 from zipfile import ZipFile
 from datetime import datetime
 
 from model.transformation_model import Transformation
+from extraction.extraction_context import ExtractionContext
 
 log = getLogger(__name__)
 
+TRANSFORMATIONS_DIR = 'transformations'
+
 class ExtractorController(PackageController):
+
+    def get_transformations_dir(self):
+        here = os.path.dirname(__file__)
+        rootdir = os.path.dirname(os.path.dirname(here))
+        return os.path.join(rootdir, TRANSFORMATIONS_DIR)
 
     def get_transformation_data(self, id):
         transformation = model.Session.query(Transformation).filter_by(package_id=id).first()
@@ -31,11 +41,11 @@ class ExtractorController(PackageController):
 
         return c
         
-    def show_extractor_config(self, id):
-        log.info('Showing extractor configuration for id: %s' % id)         
+    def show_extractor_config(self, package_name):
+        log.info('Showing extractor configuration for package name: %s' % package_name)         
 
         # using default functionality
-        template = self.read(id)
+        template = self.read(package_name)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -47,11 +57,11 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('extractor/read.html')
 
-    def extract_transformation(self, id):
-        log.info('Processing submitted transformation for id: %s' % id)
+    def extract_transformation(self, package_name):
+        log.info('Processing submitted transformation for package_name: %s' % package_name)
 
          # using default functionality
-        template = self.read(id)
+        template = self.read(package_name)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -74,12 +84,13 @@ class ExtractorController(PackageController):
                 submitted_file = request.params['transformation_code'].file
 
                 #create transformations directory if it does not exist
-                if not os.path.isdir('transformations'):
+                transformations_dir = self.get_transformations_dir()
+                if not os.path.isdir(transformations_dir):
                     log.info('Creating transformations directory')
-                    os.mkdir('transformations')
+                    os.mkdir(transformations_dir)
 
                 #delete package directory if it exists
-                package_dir = os.path.join('transformations', id)
+                package_dir = os.path.join(transformations_dir, package_info['id'])
                 if os.path.isdir(package_dir):
                     log.info('Deleting package directory %s' % package_dir)
                     shutil.rmtree(package_dir)
@@ -106,16 +117,16 @@ class ExtractorController(PackageController):
 
         model.Session.merge(transformation)
         model.Session.commit()
-        log.info("Transformation object stored for package '%s'" % id)
+        log.info("Transformation object stored for package name '%s'" % package_name)
 
         #rendering using default template
         return render('package/read.html')
 
-    def download_transformation(self, id):
-        log.info('Dowloading transformation for id: %s' % id)
+    def download_transformation(self, package_name):
+        log.info('Dowloading transformation for package name: %s' % package_name)
 
         # using default functionality
-        template = self.read(id)
+        template = self.read(package_name)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -130,3 +141,33 @@ class ExtractorController(PackageController):
             response.headers['Pragma'] = 'no-cache'
 
             return transformation.data
+
+    def my_import(self, name):
+        module, clazz = name.split(':')
+        mod = __import__(module, fromlist = [''])
+        return getattr(mod, clazz)
+
+    def launch_transformation(self, package_name):
+        log.info('Launching transformation for package name: %s' % package_name)
+
+        # using default functionality
+        template = self.read(package_name)
+
+        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
+        package_info = get_action('package_show')(context, {'id': c.pkg.id})
+
+        #change to transformation directory
+        transformation_dir = os.path.join(self.get_transformations_dir(), package_info['id'])        
+        os.chdir(transformation_dir)
+        sys.path.append(transformation_dir)
+
+        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
+
+        #import main class and instantiate transformation
+        clazz = self.my_import(transformation.mainclass)
+        transformation_instance = clazz()
+
+        #create context and call transformation entry point
+        context = ExtractionContext(transformation, model.Session)
+        transformation_instance.init_transformation(context)
+        sys.path.remove(transformation_dir)

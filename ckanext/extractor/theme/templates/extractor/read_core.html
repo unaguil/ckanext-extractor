@@ -56,6 +56,11 @@
         <b>${c.error_message}</b>
       </py:if>
     </div>
+
+     <form class="form-horizontal" name="launch_transformation" method="post"
+      action="/dataset/extractor/${c.pkg.name}/transformation_launch">
+      <input class="btn btn-primary" type="submit" name="submit" value="Launch transformation" />
+    </form>
   </div>
 
 </html>
