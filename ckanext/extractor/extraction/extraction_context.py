@@ -14,7 +14,7 @@ class ExtractionContext():
 		self.extraction = session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(desc(Extraction.start_date)).first()
 
 		if self.extraction is None or self.extraction.transformation_status in ['ok', 'error']:
-			self.extraction = Extraction(transformation.package_id, datetime.now(), None, 'working')
+			self.extraction = Extraction(transformation.package_id, datetime.now(), '', 'working')
 		elif self.extraction.transformation_status in ['ok', 'error']:
 			self.extraction = Extraction(transformation.package_id, datetime.now(), self.extraction.context, 'working')
 
@@ -24,24 +24,24 @@ class ExtractionContext():
 		#call the plugin with the current context
 		pass
 
-	def update_context(new_context):
+	def update_context(self, new_context):
 		self.extraction.context = new_context
 		session.merge(self.extraction)
 		session.commit()
 
-	def get_current_context():
+	def get_current_context(self):
 		return self.extraction.context
 
-	def finish_ok(comment):
+	def finish_ok(self, comment):
 		self.extraction.end_date = datetime.now()
 		self.extraction.transformation_status = 'ok'
 		self.extraction.comment = comment
-		session.merge(self.extraction)
-		session.commit()
+		self.session.merge(self.extraction)
+		self.session.commit()
 
-	def finish_error(comment):
+	def finish_error(self, comment):
 		self.extraction.end_date = datetime.now()
 		self.extraction.transformation_status = 'error'
 		self.extraction.comment = comment
-		session.merge(self.extraction)
-		session.commit()
+		self.session.merge(self.extraction)
+		self.session.commit()
