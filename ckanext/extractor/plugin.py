@@ -50,19 +50,19 @@ class ExtractorExtension(SingletonPlugin):
         return stream
        
     def before_map(self, map):
-        map.connect('/dataset/extractor/{package_name}',
+        map.connect('/dataset/extractor/{id}',
             controller='ckanext.extractor.controller:ExtractorController',
             action='show_extractor_config')
 
-        map.connect('/dataset/extractor/{package_name}/transformation_submit',
+        map.connect('/dataset/extractor/{id}/transformation_submit',
             controller='ckanext.extractor.controller:ExtractorController',
             action='extract_transformation')
 
-        map.connect('/dataset/extractor/{package_name}/transformation_download',
+        map.connect('/dataset/extractor/{id}/transformation_download',
             controller='ckanext.extractor.controller:ExtractorController',
             action='download_transformation')
 
-        map.connect('/dataset/extractor/{package_name}/transformation_launch',
+        map.connect('/dataset/extractor/{id}/transformation_launch',
             controller='ckanext.extractor.controller:ExtractorController',
             action='launch_transformation')
 

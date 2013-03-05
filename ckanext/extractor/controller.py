@@ -41,11 +41,11 @@ class ExtractorController(PackageController):
 
         return c
         
-    def show_extractor_config(self, package_name):
-        log.info('Showing extractor configuration for package name: %s' % package_name)         
+    def show_extractor_config(self, id):
+        log.info('Showing extractor configuration for package name: %s' % id)         
 
         # using default functionality
-        template = self.read(package_name)
+        template = self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -57,11 +57,11 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('extractor/read.html')
 
-    def extract_transformation(self, package_name):
-        log.info('Processing submitted transformation for package_name: %s' % package_name)
+    def extract_transformation(self, id):
+        log.info('Processing submitted transformation for package name: %s' % id)
 
          # using default functionality
-        template = self.read(package_name)
+        template = self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -117,16 +117,16 @@ class ExtractorController(PackageController):
 
         model.Session.merge(transformation)
         model.Session.commit()
-        log.info("Transformation object stored for package name '%s'" % package_name)
+        log.info("Transformation object stored for package name '%s'" % id)
 
         #rendering using default template
         return render('package/read.html')
 
-    def download_transformation(self, package_name):
-        log.info('Dowloading transformation for package name: %s' % package_name)
+    def download_transformation(self, id):
+        log.info('Dowloading transformation for package name: %s' % id)
 
         # using default functionality
-        template = self.read(package_name)
+        template = self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -147,11 +147,11 @@ class ExtractorController(PackageController):
         mod = __import__(module, fromlist = [''])
         return getattr(mod, clazz)
 
-    def launch_transformation(self, package_name):
-        log.info('Launching transformation for package name: %s' % package_name)
+    def launch_transformation(self, id):
+        log.info('Launching transformation for package name: %s' % id)
 
         # using default functionality
-        template = self.read(package_name)
+        template = self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
