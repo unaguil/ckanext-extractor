@@ -11,6 +11,7 @@ import traceback
 import os
 import os.path
 import shutil
+import ConfigParser
 from zipfile import ZipFile
 from datetime import datetime
 
@@ -33,7 +34,6 @@ class ExtractorController(PackageController):
 
         if transformation is not None:
             c.timestamp = transformation.timestamp.isoformat()
-            c.mainclass = transformation.mainclass
             c.filename = transformation.filename
             c.enabled = transformation.enabled
             c.extractions = transformation.extractions
@@ -112,10 +112,6 @@ class ExtractorController(PackageController):
             #read enabled status of transformation
             transformation.enabled = 'enabled' in request.params
             
-        #get mainclass value
-        if 'mainclass' in request.params:
-            transformation.mainclass = request.params['mainclass']
-
         #read submitted file
         if 'transformation_code' in request.params and request.params['transformation_code'] is not u'':
             try:
@@ -134,8 +130,14 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('package/read.html')
 
+    def get_main_class(self, transformation_dir):
+        os.chdir(transformation_dir)
+        config = ConfigParser.ConfigParser()
+        config.readfp(open('entry_point.txt'))
+        return config.get('ckan-extractor', 'mainclass')
+
     def deploy_transformation(self, transformation_dir, transformation):
-        transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+        transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
         transformation_instance.create_db()
 
         #remove extraction log
@@ -196,7 +198,7 @@ class ExtractorController(PackageController):
         context = ExtractionContext(transformation, model.Session)
 
         try:
-            transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+            transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
             log.info('Starting transformation %s' % transformation.package_id)
             transformation_instance.start_transformation(context)
         except:

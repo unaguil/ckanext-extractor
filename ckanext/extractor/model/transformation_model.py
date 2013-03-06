@@ -13,20 +13,18 @@ class Transformation(Base):
     filename = Column(String, nullable=False)
     data = Column(LargeBinary, nullable=False)
     timestamp = Column(DateTime, nullable=False)
-    mainclass = Column(String, nullable=False)
     enabled = Column(Boolean, nullable=False)
     extractions = relationship("Extraction", backref="transformation")
 
-    def __init__(self, package_id, filename=None, data=None, timestamp=None, mainclass=None, enabled=True):
+    def __init__(self, package_id, filename=None, data=None, timestamp=None, enabled=True):
         self.package_id = package_id
         self.filename = filename
         self.data = data
         self.timestamp = timestamp
-        self.mainclass = mainclass
         self.enabled = enabled
 
     def __repr__(self):
-        return '<Transformation package_id: %s filename: %s timestamp: %s mainclass: %s enabled: %s>' % (self.package_id, self.filename, self.timestamp, self.mainclass, self.enabled)
+        return '<Transformation package_id: %s filename: %s timestamp: %s enabled: %s>' % (self.package_id, self.filename, self.timestamp, self.mainclass, self.enabled)
 
 class Extraction(Base):
     __tablename__ = 'extractions'

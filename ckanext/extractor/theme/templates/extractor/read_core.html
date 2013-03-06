@@ -18,13 +18,6 @@ py:strip=""
     action="/dataset/extractor/${c.pkg.name}/transformation_submit">
     
     <fieldset class="tab-pane" id="transformation-deployment">
-      <div class="control-group">
-        <label class="control-label">Main Class</label>
-        <div class="controls">
-          <input class="js-title" type="text" name="mainclass" value="${c.mainclass}"/>
-        </div>
-      </div>
-
       <py:if test="c.data">      
         <div class="control-group">
           <label class="control-label">File Name</label>
