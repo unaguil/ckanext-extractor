@@ -13,7 +13,10 @@ py:strip=""
       <li><a data-toggle="tab" href="#execution-log">Execution Log</a></li>
       <li><a data-toggle="tab" href="#launch-transformation">Launch Transformation</a></li>
     </ul>
-    <form class="tab-content form-horizontal" id="dataset-edit" method="post" enctype="multipart/form-data">
+    <form class="tab-content form-horizontal" id="dataset-edit"
+    method="post" enctype="multipart/form-data"
+    action="/dataset/extractor/${c.pkg.name}/transformation_submit">
+    
     <fieldset class="tab-pane" id="transformation-configuration">
       <div class="control-group">
         <label class="control-label">Main Class</label>
@@ -50,7 +53,7 @@ py:strip=""
 
       <input type="file" name="transformation_code" />
       <div class="form-actions">
-        <input class="btn btn-primary href-action" type="button" name="submit" value="Submit" action="/dataset/extractor/${c.pkg.name}/transformation_submit"/>
+        <input class="btn btn-primary" type="submit" name="submit" value="Submit" />
         <input id="cancel" class="btn href-action" name="button" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
       </div>
 
@@ -82,10 +85,7 @@ py:strip=""
     <fieldset class="tab-pane" id="launch-transformation">
       <py:if test="c.data">
         <h3>For testing purposes only</h3>
-        <form class="form-horizontal" name="launch_transformation" method="post"
-        action="/dataset/extractor/${c.pkg.name}/transformation_launch">
-          <input class="btn btn-primary" type="submit" name="submit" value="Launch transformation" />
-        </form>
+          <input class="btn btn-primary href-action" type="button" name="submit" value="Launch transformation" action="/dataset/extractor/${c.pkg.name}/transformation_launch"/>
       </py:if>
     </fieldset>
   </form>
