@@ -64,6 +64,38 @@ class ExtractorController(PackageController):
         c.error_message = message
         return render('extractor/read.html')
 
+    def extract_zip_file(self, transformation, submitted_file):
+        log.info('Extracting zip file %s' % transformation.filename)
+
+        #create transformations directory if it does not exist
+        transformations_dir = self.get_transformations_dir()
+        if not os.path.isdir(transformations_dir):
+            log.info('Creating transformations directory')
+            os.mkdir(transformations_dir)
+
+        #delete package directory if it exists
+        package_dir = os.path.join(transformations_dir, transformation.package_id)
+        if os.path.isdir(package_dir):
+            log.info('Deleting package directory %s' % package_dir)
+            shutil.rmtree(package_dir)
+
+        #create directory again and change to it
+        log.info('Creating package directory %s' % package_dir)
+        os.mkdir(package_dir)
+        os.chdir(package_dir)
+
+        zipfile = ZipFile(submitted_file)
+        log.info('Extracting file %s to directory %s' % (transformation.filename, package_dir))
+        zipfile.extractall()
+
+        #obtain data
+        submitted_file.seek(0)
+        transformation.data = submitted_file.read()
+        transformation.timestamp = datetime.now()
+
+        log.info('File %s extracted' % transformation.filename)
+        return package_dir
+
     def extract_transformation(self, id):
         log.info('Processing submitted transformation for package name: %s' % id)
 
@@ -90,35 +122,12 @@ class ExtractorController(PackageController):
                 transformation.filename = request.params['transformation_code'].filename
                 submitted_file = request.params['transformation_code'].file
 
-                #create transformations directory if it does not exist
-                transformations_dir = self.get_transformations_dir()
-                if not os.path.isdir(transformations_dir):
-                    log.info('Creating transformations directory')
-                    os.mkdir(transformations_dir)
+                transformation_dir = self.extract_zip_file(transformation, submitted_file)
 
-                #delete package directory if it exists
-                package_dir = os.path.join(transformations_dir, package_info['id'])
-                if os.path.isdir(package_dir):
-                    log.info('Deleting package directory %s' % package_dir)
-                    shutil.rmtree(package_dir)
-
-                #create directory again and change to it
-                log.info('Creating package directory %s' % package_dir)
-                os.mkdir(package_dir)
-                os.chdir(package_dir)
-
-                zipfile = ZipFile(submitted_file)
-                log.info('Extracting file %s to directory %s' % (transformation.filename, package_dir))
-                zipfile.extractall()
-
-                #obtain data
-                submitted_file.seek(0)
-                transformation.data = submitted_file.read()
-                transformation.timestamp = datetime.now()
-
-                log.info('File %s extracted' % transformation.filename)
+                transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+                transformation_instance.create_db()
             except Exception as e:
-                return self.render_error_messsage('Problem extracting uploaded file %s (%s)' % (transformation.filename, e))
+                return self.render_error_messsage('Problem deploying uploaded file %s (%s)' % (transformation.filename, e))
 
         model.Session.merge(transformation)
         model.Session.commit()
@@ -153,6 +162,14 @@ class ExtractorController(PackageController):
         reload(mod)
         return getattr(mod, clazz)
 
+    def get_instance(self, transformation_dir, mainclass):
+        sys.path.append(transformation_dir)
+        #import main class and instantiate transformation
+        clazz = self.my_import(mainclass)
+        transformation_instance = clazz()
+        sys.path.remove(transformation_dir)
+        return transformation_instance
+
     def launch_transformation(self, id):
         log.info('Launching transformation for package name: %s' % id)
 
@@ -165,7 +182,6 @@ class ExtractorController(PackageController):
         #change to transformation directory
         transformation_dir = os.path.join(self.get_transformations_dir(), package_info['id'])        
         os.chdir(transformation_dir)
-        sys.path.append(transformation_dir)
 
         transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
 
@@ -173,13 +189,9 @@ class ExtractorController(PackageController):
         context = ExtractionContext(transformation, model.Session)
 
         try:
-            #import main class and instantiate transformation
-            clazz = self.my_import(transformation.mainclass)
-            transformation_instance = clazz()
-            transformation_instance.init_transformation(context)
+            transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+            transformation_instance.start_transformation(context)
         except:
             comment = traceback.format_exc()
             context.finish_error(comment)
             log.info(comment)
-
-        sys.path.remove(transformation_dir)
