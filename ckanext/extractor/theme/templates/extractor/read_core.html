@@ -50,8 +50,8 @@ py:strip=""
 
       <input type="file" name="transformation_code" />
       <div class="form-actions">
-        <input class="btn btn-primary" type="submit" name="submit" value="Submit" action="/dataset/extractor/${c.pkg.name}/transformation_submit"/>
-        <input id="cancel" class="btn href-action" name="cancel" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
+        <input class="btn btn-primary href-action" type="button" name="submit" value="Submit" action="/dataset/extractor/${c.pkg.name}/transformation_submit"/>
+        <input id="cancel" class="btn href-action" name="button" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
       </div>
 
       <py:if test="c.error">
