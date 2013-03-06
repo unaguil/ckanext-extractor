@@ -123,9 +123,7 @@ class ExtractorController(PackageController):
                 submitted_file = request.params['transformation_code'].file
 
                 transformation_dir = self.extract_zip_file(transformation, submitted_file)
-
-                transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
-                transformation_instance.create_db()
+                self.deploy_transformation(transformation_dir, transformation)
             except Exception as e:
                 return self.render_error_messsage('Problem deploying uploaded file %s (%s)' % (transformation.filename, e))
 
@@ -135,6 +133,15 @@ class ExtractorController(PackageController):
 
         #rendering using default template
         return render('package/read.html')
+
+    def deploy_transformation(self, transformation_dir, transformation):
+        transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+        transformation_instance.create_db()
+
+        #remove extraction log
+        transformation.extractions = []
+        model.Session.merge(transformation)
+        model.Session.commit()
 
     def download_transformation(self, id):
         log.info('Dowloading transformation for package name: %s' % id)
