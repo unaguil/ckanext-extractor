@@ -14,7 +14,7 @@ import shutil
 from zipfile import ZipFile
 from datetime import datetime
 
-from model.transformation_model import Transformation
+from model.transformation_model import Transformation, Extraction
 from extraction.extraction_context import ExtractionContext
 
 log = getLogger(__name__)
@@ -37,6 +37,8 @@ class ExtractorController(PackageController):
             c.filename = transformation.filename
             c.enabled = transformation.enabled
             c.data = True
+
+            c.extractions = model.Session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(Extraction.start_date).all()
         else:
             c.data = False
 
