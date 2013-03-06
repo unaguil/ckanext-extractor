@@ -1,0 +1,2 @@
+[ckan-extractor]
+mainclass = crawler.evictions_crawler:Crawler
