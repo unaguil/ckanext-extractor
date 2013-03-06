@@ -9,7 +9,7 @@ py:strip=""
   <div class="tabbable tabs-left dataset-edit-tabs">
     <ul class="nav nav-tabs">
       <!-- One button for each fieldset -->
-      <li class="active"><a data-toggle="tab" href="#transformation-configuration">Transformation Configuration</a></li>
+      <li class="active"><a data-toggle="tab" href="#transformation-deployment">Transformation Deployment</a></li>
       <li><a data-toggle="tab" href="#execution-log">Execution Log</a></li>
       <li><a data-toggle="tab" href="#launch-transformation">Launch Transformation</a></li>
     </ul>
@@ -17,7 +17,7 @@ py:strip=""
     method="post" enctype="multipart/form-data"
     action="/dataset/extractor/${c.pkg.name}/transformation_submit">
     
-    <fieldset class="tab-pane" id="transformation-configuration">
+    <fieldset class="tab-pane" id="transformation-deployment">
       <div class="control-group">
         <label class="control-label">Main Class</label>
         <div class="controls">
