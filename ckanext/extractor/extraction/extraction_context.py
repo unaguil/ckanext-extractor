@@ -24,13 +24,12 @@ class ExtractionContext():
 			self.extraction = Extraction(datetime.now(), self.extraction.context, WORKING)
 			self.transformation.extractions.append(self.extraction)
 
-		#store current transformation status
-		session.merge(self.extraction)
-		session.commit()
+		self.session.merge(self.transformation)
+		self.session.commit()
 
 	def update_context(self, new_context):
 		self.extraction.context = new_context
-		session.merge(self.extraction)
+		session.merge(self.transformation)
 		session.commit()
 
 	def get_current_context(self):
@@ -40,12 +39,12 @@ class ExtractionContext():
 		self.extraction.end_date = datetime.now()
 		self.extraction.transformation_status = OK
 		self.extraction.comment = comment
-		self.session.merge(self.extraction)
+		self.session.merge(self.transformation)
 		self.session.commit()
 
 	def finish_error(self, comment):
 		self.extraction.end_date = datetime.now()
 		self.extraction.transformation_status = ERROR
 		self.extraction.comment = comment
-		self.session.merge(self.extraction)
+		self.session.merge(self.transformation)
 		self.session.commit()
