@@ -11,6 +11,7 @@ import traceback
 import os
 import os.path
 import shutil
+import threading
 import ConfigParser
 from zipfile import ZipFile
 from datetime import datetime
@@ -29,19 +30,17 @@ class ExtractorController(PackageController):
         rootdir = os.path.dirname(os.path.dirname(here))
         return os.path.join(rootdir, TRANSFORMATIONS_DIR)
 
-    def get_transformation_data(self, id):
+    def get_transformation_data(self, id, data):
         transformation = model.Session.query(Transformation).filter_by(package_id=id).first()
 
         if transformation is not None:
-            c.timestamp = transformation.timestamp.isoformat()
-            c.filename = transformation.filename
-            c.enabled = transformation.enabled
-            c.extractions = transformation.extractions
-            c.data = True
+            data.timestamp = transformation.timestamp.isoformat()
+            data.filename = transformation.filename
+            data.enabled = transformation.enabled
+            data.extractions = transformation.extractions
+            data.data = True
         else:
-            c.data = False
-
-        return c
+            data.data = False
         
     def show_extractor_config(self, id):
         log.info('Showing extractor configuration for package name: %s' % id)         
@@ -52,11 +51,11 @@ class ExtractorController(PackageController):
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
 
-        self.get_transformation_data(package_info['id'])
+        self.get_transformation_data(package_info['id'], c)
 
         c.error = False
 
-        #rendering using default template
+        #rendering using template
         return render('extractor/read.html')
 
     def render_error_messsage(self, message):
@@ -130,12 +129,6 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('package/read.html')
 
-    def get_main_class(self, transformation_dir):
-        os.chdir(transformation_dir)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open('entry_point.txt'))
-        return config.get('ckan-extractor', 'mainclass')
-
     def deploy_transformation(self, transformation_dir, transformation):
         transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
         transformation_instance.create_db()
@@ -198,10 +191,33 @@ class ExtractorController(PackageController):
         context = ExtractionContext(transformation, model.Session)
 
         try:
-            transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
             log.info('Starting transformation %s' % transformation.package_id)
-            transformation_instance.start_transformation(context)
+            t = ThreadClass(transformation_dir, context)
+            t.start()
         except:
             comment = traceback.format_exc()
             context.finish_error(comment)
             log.info(comment)
+
+        self.get_transformation_data(package_info['id'], c)
+        c.error = False
+
+        #rendering using template
+        return render('extractor/read.html')
+        
+class ThreadClass(threading.Thread):
+
+    def __init__(self, transformation_dir, context):
+        threading.Thread.__init__(self)
+        self.transformation_dir = transformation_dir
+        self.context = context
+
+    def get_main_class(self, transformation_dir):
+        os.chdir(transformation_dir)
+        config = ConfigParser.ConfigParser()
+        config.readfp(open('entry_point.txt'))
+        return config.get('ckan-extractor', 'mainclass')
+
+    def run(self):
+        transformation_instance = self.get_instance(self.transformation_dir, self.get_main_class(self.transformation_dir))
+        transformation_instance.start_transformation(self.context)
