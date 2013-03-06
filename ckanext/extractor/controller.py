@@ -7,6 +7,7 @@ from ckan.controllers.package import PackageController
 from pylons import request
 
 import sys
+import traceback
 import os
 import os.path
 import shutil
@@ -163,11 +164,16 @@ class ExtractorController(PackageController):
 
         transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
 
-        #import main class and instantiate transformation
-        clazz = self.my_import(transformation.mainclass)
-        transformation_instance = clazz()
-
         #create context and call transformation entry point
         context = ExtractionContext(transformation, model.Session)
-        transformation_instance.init_transformation(context)
+
+        try:
+            #import main class and instantiate transformation
+            clazz = self.my_import(transformation.mainclass)
+            transformation_instance = clazz()
+            transformation_instance.init_transformation(context)
+        except:
+            comment = traceback.format_exc()
+            context.finish_error(comment)
+
         sys.path.remove(transformation_dir)
