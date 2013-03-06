@@ -1,7 +1,8 @@
 # -*- coding: utf8 -*- 
 
-from sqlalchemy import Column, String, LargeBinary, DateTime, Integer, Boolean
+from sqlalchemy import Column, String, LargeBinary, DateTime, Integer, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
 
@@ -14,6 +15,7 @@ class Transformation(Base):
     timestamp = Column(DateTime, nullable=False)
     mainclass = Column(String, nullable=False)
     enabled = Column(Boolean, nullable=False)
+    extractions = relationship("Extraction", backref="transformation")
 
     def __init__(self, package_id, filename=None, data=None, timestamp=None, mainclass=None, enabled=True):
         self.package_id = package_id
@@ -31,17 +33,16 @@ class Extraction(Base):
 
     id = Column(Integer, primary_key=True)
     start_date = Column(DateTime, primary_key=True)
-    transformation_id = Column(String, nullable=False)
+    transformation_id = Column(String, ForeignKey('transformations.package_id'))
     end_date = Column(DateTime)
     context = Column(String, nullable=False)
     transformation_status = Column(String, nullable=False)
     comment = Column(String)
 
-    def __init__(self, transformation_id, start_date, context, transformation_status):
-        self.transformation_id = transformation_id
+    def __init__(self, start_date, context, transformation_status):
         self.start_date = start_date
         self.context = context
         self.transformation_status = transformation_status
 
     def __repr__(self):
-        return '<Extraction transformation_id: %s start_date: %s end_date: %s context: %s transformation_status: %s>' % (self.transformation_id, self.start_date, self.end_date, self.context, self.transformation_status)
+        return '<Extraction transformation_id: %s start_date: %s end_date: %s context: %s transformation_status: %s>' % (self.transformation.package_id, self.start_date, self.end_date, self.context, self.transformation_status)

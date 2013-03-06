@@ -36,9 +36,8 @@ class ExtractorController(PackageController):
             c.mainclass = transformation.mainclass
             c.filename = transformation.filename
             c.enabled = transformation.enabled
+            c.extractions = transformation.extractions
             c.data = True
-
-            c.extractions = model.Session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(Extraction.start_date).all()
         else:
             c.data = False
 
@@ -58,6 +57,11 @@ class ExtractorController(PackageController):
         c.error = False
 
         #rendering using default template
+        return render('extractor/read.html')
+
+    def render_error_messsage(self, message):
+        c.error = True
+        c.error_message = message
         return render('extractor/read.html')
 
     def extract_transformation(self, id):
@@ -114,9 +118,7 @@ class ExtractorController(PackageController):
 
                 log.info('File %s extracted' % transformation.filename)
             except Exception as e:
-                c.error = True
-                c.error_message = 'Problem extracting uploaded file %s (%s)' % (transformation.filename, e)
-                return render('extractor/read.html')
+                return self.render_error_messsage('Problem extracting uploaded file %s (%s)' % (transformation.filename, e))
 
         model.Session.merge(transformation)
         model.Session.commit()
@@ -148,6 +150,7 @@ class ExtractorController(PackageController):
     def my_import(self, name):
         module, clazz = name.split(':')
         mod = __import__(module, fromlist = [''])
+        reload(mod)
         return getattr(mod, clazz)
 
     def launch_transformation(self, id):
@@ -177,5 +180,6 @@ class ExtractorController(PackageController):
         except:
             comment = traceback.format_exc()
             context.finish_error(comment)
+            log.info(comment)
 
         sys.path.remove(transformation_dir)

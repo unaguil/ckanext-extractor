@@ -14,15 +14,11 @@ class ExtractionContext():
 		self.extraction = session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(desc(Extraction.start_date)).first()
 
 		if self.extraction is None or self.extraction.transformation_status in ['ok', 'error']:
-			self.extraction = Extraction(transformation.package_id, datetime.now(), '', 'working')
+			self.extraction = Extraction(datetime.now(), '', 'working')
+			self.transformation.extractions.append(self.extraction)
 		elif self.extraction.transformation_status in ['ok', 'error']:
-			self.extraction = Extraction(transformation.package_id, datetime.now(), self.extraction.context, 'working')
-
-		self._initialize(self.extraction.context)
-
-	def _initialize(self, context):
-		#call the plugin with the current context
-		pass
+			self.extraction = Extraction(datetime.now(), self.extraction.context, 'working')
+			self.transformation.extractions.append(self.extraction)
 
 	def update_context(self, new_context):
 		self.extraction.context = new_context
