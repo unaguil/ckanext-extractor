@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-from model import Desahucio, Municipio, PartidoJudicial
+from model import *
 from extra_data import *
 
 import os
@@ -42,8 +42,6 @@ DIA = u'día'
 
 #
 cod_eviction = 'hipotecari'
-
-Base = declarative_base()
 
 class Crawler():
 
