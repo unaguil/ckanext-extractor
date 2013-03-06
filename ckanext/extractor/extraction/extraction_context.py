@@ -20,6 +20,10 @@ class ExtractionContext():
 			self.extraction = Extraction(datetime.now(), self.extraction.context, 'working')
 			self.transformation.extractions.append(self.extraction)
 
+		#store current transformation status
+		session.merge(self.extraction)
+		session.commit()
+
 	def update_context(self, new_context):
 		self.extraction.context = new_context
 		session.merge(self.extraction)
