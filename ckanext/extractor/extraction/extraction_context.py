@@ -4,6 +4,10 @@ from sqlalchemy import desc
 from ckanext.extractor.model.transformation_model import Extraction
 from datetime import datetime
 
+WORKING = 'working'
+ERROR = 'error'
+OK = 'ok'
+
 class ExtractionContext():
 
 	def __init__(self, transformation, session):
@@ -13,11 +17,11 @@ class ExtractionContext():
 		#initialize current status using database information if it exists
 		self.extraction = session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(desc(Extraction.start_date)).first()
 
-		if self.extraction is None or self.extraction.transformation_status in ['ok', 'error']:
-			self.extraction = Extraction(datetime.now(), '', 'working')
+		if self.extraction is None:
+			self.extraction = Extraction(datetime.now(), '', WORKING)
 			self.transformation.extractions.append(self.extraction)
-		elif self.extraction.transformation_status in ['ok', 'error']:
-			self.extraction = Extraction(datetime.now(), self.extraction.context, 'working')
+		else:
+			self.extraction = Extraction(datetime.now(), self.extraction.context, WORKING)
 			self.transformation.extractions.append(self.extraction)
 
 		#store current transformation status
@@ -34,14 +38,14 @@ class ExtractionContext():
 
 	def finish_ok(self, comment):
 		self.extraction.end_date = datetime.now()
-		self.extraction.transformation_status = 'ok'
+		self.extraction.transformation_status = OK
 		self.extraction.comment = comment
 		self.session.merge(self.extraction)
 		self.session.commit()
 
 	def finish_error(self, comment):
 		self.extraction.end_date = datetime.now()
-		self.extraction.transformation_status = 'error'
+		self.extraction.transformation_status = ERROR
 		self.extraction.comment = comment
 		self.session.merge(self.extraction)
 		self.session.commit()
