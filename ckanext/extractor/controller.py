@@ -17,7 +17,7 @@ from zipfile import ZipFile
 from datetime import datetime
 
 from model.transformation_model import Transformation, Extraction
-from extraction.extraction_context import ExtractionContext
+from extraction.extraction_context import ExtractionContext, WORKING, ERROR, OK
 
 log = getLogger(__name__)
 
@@ -204,6 +204,26 @@ class ExtractorController(PackageController):
 
         #rendering using template
         return render('extractor/read.html')
+
+    def show_message(self, id, extraction_id):
+        log.info('Showing message for extraction %s of package name: %s ' % (extraction_id, id))
+
+        # using default functionality
+        template = self.read(id)
+
+        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
+        package_info = get_action('package_show')(context, {'id': c.pkg.id})
+
+        extraction = model.Session.query(Extraction).filter_by(transformation_id=package_info['id'], id=extraction_id).first()
+
+        if extraction.transformation_status == WORKING:
+            print WORKING * 30
+            c.comment = 'Context: %s' % extraction.context
+        else:
+            c.comment = extraction.comment
+
+        #render template
+        return render('extractor/comment.html')
         
 class ThreadClass(threading.Thread):
 

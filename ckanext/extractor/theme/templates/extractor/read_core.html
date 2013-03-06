@@ -70,7 +70,7 @@ py:strip=""
                   <td py:when="extraction.end_date is not None">${extraction.end_date.strftime("%h %d, %Y, %H:%M:%S")}</td>
                   <td py:otherwise=""></td>
                 </py:choose>
-                <td><a>${extraction.transformation_status}</a></td>
+                <td><a href="/dataset/extractor/${c.pkg.name}/show_message/${extraction.id}">${extraction.transformation_status}</a></td>
               </tr>
             </py:for>
           </tbody>

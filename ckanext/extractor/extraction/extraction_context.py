@@ -4,9 +4,9 @@ from sqlalchemy import desc
 from ckanext.extractor.model.transformation_model import Extraction
 from datetime import datetime
 
-WORKING = 'working'
-ERROR = 'error'
-OK = 'ok'
+WORKING = u'working'
+ERROR = u'error'
+OK = u'ok'
 
 class ExtractionContext():
 
