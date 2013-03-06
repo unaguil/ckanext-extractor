@@ -73,7 +73,10 @@ py:strip=""
             <py:for each="extraction in c.extractions">
               <tr>
                 <td>${extraction.start_date.strftime("%h %d, %Y, %H:%M:%S")}</td>
-                <td>${extraction.end_date.strftime("%h %d, %Y, %H:%M:%S")}</td>
+                <py:choose>
+                  <td py:when="extraction.end_date is not None">${extraction.end_date.strftime("%h %d, %Y, %H:%M:%S")}</td>
+                  <td py:otherwise=""></td>
+                </py:choose>
                 <td><a>${extraction.transformation_status}</a></td>
               </tr>
             </py:for>
