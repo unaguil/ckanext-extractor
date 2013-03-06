@@ -177,7 +177,7 @@ class Crawler():
                 self.session.add(eviction)
                 self.session.commit()
 
-    def init_transformation(self, context):
+    def start_transformation(self, context):
         self.scrappList()
 
     def create_db(self):
@@ -204,9 +204,3 @@ class Crawler():
         session.commit()
         session.close()
 
-if __name__ == "__main__":
-    c = Crawler()
-
-    c.create_db()
-
-    c.init_transformation(None)
