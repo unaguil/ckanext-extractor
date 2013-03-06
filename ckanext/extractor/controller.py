@@ -197,6 +197,7 @@ class ExtractorController(PackageController):
 
         try:
             transformation_instance = self.get_instance(transformation_dir, transformation.mainclass)
+            log.info('Starting transformation %s' % transformation.package_id)
             transformation_instance.start_transformation(context)
         except:
             comment = traceback.format_exc()
