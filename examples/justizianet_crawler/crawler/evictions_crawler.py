@@ -80,25 +80,36 @@ class Crawler():
                 if self.isAnImportantWord(title, importantworddict):
                     self.scrappEviction(cpartido=cpartido, url=detailsurl, title=title, cancelled=cancelled)
 
+    def context_generator(self, extraction_context):
+        context = extraction_context.get_current_context()
+        if len(context) == 0:
+            #initialize status and store it
+            for cpartido in cpartidos.keys():
+                context[cpartido] = None
+            extraction_context.update_context(context)
+        
+        for cpartido in context.keys():
+            if context[cpartido] is None:
+                start_date = datetime(2005, 01, 01)
+                end_date = datetime.now()
+            else:
+                start_date = context[cpartido][1]
+                end_date = datetime.now()
+
+            context[cpartido] = (start_date, end_date)
+            yield cpartido, start_date, end_date
+            extraction_context.update_context(context)
+
     def scrappList(self, extraction_context):
-        current_status = extraction_context.get_current_context()
-
-        status = {}
-        if len(current_status) == 0:
-            #start context
-            status['start_date'] = datetime(2005, 01, 01)
-        else:
-            status['start_date'] = current_status['end_date']
-        status['end_date'] = datetime.now()
-
-        for cpartido in sorted(cpartidos.keys()):
+        for cpartido, start_date, end_date in self.context_generator(extraction_context):
+            print ' * Downloading %s from %s to %s' % (cpartido, start_date, end_date)
             page = 1
             isfinalpage = False
             while not isfinalpage:
                 isfinalpage = True
                 params = {
-                    'cfechaD': status['start_date'].strftime('%d/%m/%Y'),
-                    'cfechaH': status['end_date'].strftime('%d/%m/%Y'),
+                    'cfechaD': start_date.strftime('%d/%m/%Y'),
+                    'cfechaH': end_date.strftime('%d/%m/%Y'),
                     'cpartido': cpartido,
                     'ctipo': 'INMU',
                     'primerElem': page
@@ -107,9 +118,11 @@ class Crawler():
                 evlisthtml = self.connection(self.data_url + '?' + urllib.urlencode(params))
                 self.processPages(evlisthtml, cpartido)
             
-            page += self.pagination
+                page += self.pagination
 
-        extraction_context.finish_ok('Extraction correctly finished', status)
+            print ' * Finished download of %s from %s to %s' % (cpartido, start_date, end_date)
+
+        extraction_context.finish_ok('Extraction correctly finished')
 
     def scrappEviction(self, cpartido, url, title, cancelled):
         evicdict = {}
@@ -201,11 +214,11 @@ class Crawler():
         engine = create_engine(db_connection, convert_unicode=True, pool_recycle=3600)
 
         #destroying database schema
-        print 'Dropping tables'
+        print '* Dropping tables'
         Base.metadata.drop_all(bind = engine)
 
         #creating database schema
-        print 'Creating tables'
+        print '* Creating tables'
         Base.metadata.create_all(bind = engine)
 
         #add municipality information
