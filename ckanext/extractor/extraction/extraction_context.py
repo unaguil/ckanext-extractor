@@ -3,10 +3,13 @@
 from sqlalchemy import desc
 from ckanext.extractor.model.transformation_model import Extraction
 import datetime
+from logging import getLogger
 
 WORKING = u'working'
 ERROR = u'error'
 OK = u'ok'
+
+log = getLogger(__name__)
 
 class ExtractionContext():
 
@@ -28,6 +31,7 @@ class ExtractionContext():
 		self.session.commit()
 
 	def update_context(self, new_context):
+		log.info('Updating context for extraction %s of transformation %s' % (self.extraction.id, self.transformation.package_id))
 		self.extraction.context = unicode(new_context)
 		self.session.merge(self.transformation)
 		self.session.commit()
@@ -36,6 +40,7 @@ class ExtractionContext():
 		return eval(self.extraction.context)
 
 	def finish_ok(self, comment):
+		log.info('Extraction %s of transformation %s finished with status OK. Comment: %s' % (self.extraction.id, self.transformation.package_id, comment))
 		self.extraction.end_date = datetime.datetime.now()
 		self.extraction.transformation_status = OK
 		self.extraction.comment = comment
@@ -43,6 +48,7 @@ class ExtractionContext():
 		self.session.commit()
 
 	def finish_error(self, comment):
+		log.info('Extraction %s of transformation %s finished with status ERROR. Comment: %s' % (self.extraction.id, self.transformation.package_id, comment))
 		self.extraction.end_date = datetime.datetime.now()
 		self.extraction.transformation_status = ERROR
 		self.extraction.comment = comment
