@@ -129,6 +129,12 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('package/read.html')
 
+    def get_main_class(self, transformation_dir):
+        os.chdir(transformation_dir)
+        config = ConfigParser.ConfigParser()
+        config.readfp(open('entry_point.txt'))
+        return config.get('ckan-extractor', 'mainclass')
+
     def deploy_transformation(self, transformation_dir, transformation):
         transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
         transformation_instance.create_db()
@@ -190,14 +196,10 @@ class ExtractorController(PackageController):
         #create context and call transformation entry point
         context = ExtractionContext(transformation, model.Session)
 
-        try:
-            log.info('Starting transformation %s' % transformation.package_id)
-            t = ThreadClass(transformation_dir, context)
-            t.start()
-        except:
-            comment = traceback.format_exc()
-            context.finish_error(comment)
-            log.info(comment)
+        log.info('Starting transformation %s' % transformation.package_id)
+        transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
+        t = ThreadClass(transformation_instance, context)
+        t.start()
 
         self.get_transformation_data(package_info['id'], c)
         c.error = False
@@ -217,7 +219,6 @@ class ExtractorController(PackageController):
         extraction = model.Session.query(Extraction).filter_by(transformation_id=package_info['id'], id=extraction_id).first()
 
         if extraction.transformation_status == WORKING:
-            print WORKING * 30
             c.comment = 'Context: %s' % extraction.context
         else:
             c.comment = extraction.comment
@@ -227,17 +228,15 @@ class ExtractorController(PackageController):
         
 class ThreadClass(threading.Thread):
 
-    def __init__(self, transformation_dir, context):
+    def __init__(self, transformation_instance, context):
         threading.Thread.__init__(self)
-        self.transformation_dir = transformation_dir
+        self.transformation_instance = transformation_instance
         self.context = context
 
-    def get_main_class(self, transformation_dir):
-        os.chdir(transformation_dir)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open('entry_point.txt'))
-        return config.get('ckan-extractor', 'mainclass')
-
     def run(self):
-        transformation_instance = self.get_instance(self.transformation_dir, self.get_main_class(self.transformation_dir))
-        transformation_instance.start_transformation(self.context)
+        try: 
+            self.transformation_instance.start_transformation(self.context)
+        except:
+            comment = traceback.format_exc()
+            self.context.finish_error(comment)
+            log.info(comment)
