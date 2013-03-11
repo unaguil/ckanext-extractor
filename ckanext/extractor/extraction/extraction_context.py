@@ -29,8 +29,8 @@ class ExtractionContext():
 
 	def update_context(self, new_context):
 		self.extraction.context = unicode(new_context)
-		session.merge(self.transformation)
-		session.commit()
+		self.session.merge(self.transformation)
+		self.session.commit()
 
 	def get_current_context(self):
 		return eval(self.extraction.context)

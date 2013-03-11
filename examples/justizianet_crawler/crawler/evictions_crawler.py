@@ -21,9 +21,6 @@ import os
 
 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor)
 
-startdate = datetime(2005, 01, 01)
-enddate = datetime.now()
-
 #keys 
 URL = u'url'
 LOCALIDAD = u'localidad'
@@ -66,49 +63,53 @@ class Crawler():
             print url
             return None
 
-    def scrappList(self):
-        configParser = ConfigParser()
-        configParser.read('crawler.cfg')
-        db_connection = configParser.get('database', 'db_connection')
-        pagination = int(configParser.get('crawler', 'pagination'))
-        data_url = configParser.get('crawler', 'data_url')
+    def processPages(self, evlisthtml, cpartido):
+        #process received rows
+        for ev in evlisthtml.findAll('tr'):
+            if (ev.has_key('class') and "vevent" in ev['class']):
+                cancelled = True if ev.has_key('title') else False
+                isfinalpage = False
 
-        engine = create_engine(db_connection, convert_unicode=True, pool_recycle=3600)
+                #obtain tags
+                for evspan in ev.findAll('span'):
+                    if (evspan.has_key('class') and "summary" in evspan['class']):
+                        detailsurl = evspan.find('a')['href']
+                        title = evspan.find('a').contents[0]
 
-        self.session = sessionmaker(bind = engine)()
+                #check if entry must be stored
+                if self.isAnImportantWord(title, importantworddict):
+                    self.scrappEviction(cpartido=cpartido, url=detailsurl, title=title, cancelled=cancelled)
 
-        for cpartido in cpartidos.keys():
+    def scrappList(self, extraction_context):
+        current_status = extraction_context.get_current_context()
+
+        status = {}
+        if len(current_status) == 0:
+            #start context
+            status['start_date'] = datetime(2005, 01, 01)
+        else:
+            status['start_date'] = current_status['end_date']
+        status['end_date'] = datetime.now()
+
+        for cpartido in sorted(cpartidos.keys()):
             page = 1
             isfinalpage = False
             while not isfinalpage:
                 isfinalpage = True
                 params = {
-                    'cfechaH': enddate.strftime('%d/%m/%Y'),
-                    'cfechaD': startdate.strftime('%d/%m/%Y'),
+                    'cfechaD': status['start_date'].strftime('%d/%m/%Y'),
+                    'cfechaH': status['end_date'].strftime('%d/%m/%Y'),
                     'cpartido': cpartido,
                     'ctipo': 'INMU',
-                    'primerElem': page,
+                    'primerElem': page
                 }
 
-                evlisthtml = self.connection(data_url + '?' + urllib.urlencode(params))
+                evlisthtml = self.connection(self.data_url + '?' + urllib.urlencode(params))
+                self.processPages(evlisthtml, cpartido)
+            
+            page += self.pagination
 
-                for ev in evlisthtml.findAll('tr'):
-                    if (ev.has_key('class') and "vevent" in ev['class']):
-                        cancelled = False
-                        if ev.has_key('title'):
-                            cancelled = True
-                        isfinalpage = False
-                        for evspan in ev.findAll('span'):
-                            if (evspan.has_key('class') and "summary" in evspan['class']):
-                                detailsurl = evspan.find('a')['href']
-                                title = evspan.find('a').contents[0]
-                        if self.isAnImportantWord(title, importantworddict):
-                            eviction = self.scrappEviction(cpartido=cpartido, url=detailsurl, title=title, cancelled=cancelled)
-
-                page += pagination
-
-        self.session.commit()
-        self.session.close()
+        extraction_context.finish_ok('Extraction correctly finished', status)
 
     def scrappEviction(self, cpartido, url, title, cancelled):
         evicdict = {}
@@ -177,8 +178,21 @@ class Crawler():
                 self.session.add(eviction)
                 self.session.commit()
 
-    def start_transformation(self, context):
-        self.scrappList()
+    def start_transformation(self, extraction_context):
+        configParser = ConfigParser()
+        configParser.read('crawler.cfg')
+        db_connection = configParser.get('database', 'db_connection')
+
+        self.pagination = int(configParser.get('crawler', 'pagination'))
+        self.data_url = configParser.get('crawler', 'data_url')
+
+        engine = create_engine(db_connection, convert_unicode=True, pool_recycle=3600)
+        self.session = sessionmaker(bind = engine)()
+
+        self.scrappList(extraction_context)
+
+        self.session.commit()
+        self.session.close()
 
     def create_db(self):
         configParser = ConfigParser()
