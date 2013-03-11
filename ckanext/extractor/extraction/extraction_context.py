@@ -2,7 +2,7 @@
 
 from sqlalchemy import desc
 from ckanext.extractor.model.transformation_model import Extraction
-from datetime import datetime
+import datetime
 
 WORKING = u'working'
 ERROR = u'error'
@@ -18,10 +18,10 @@ class ExtractionContext():
 		self.extraction = session.query(Extraction).filter_by(transformation_id=transformation.package_id).order_by(desc(Extraction.start_date)).first()
 
 		if self.extraction is None:
-			self.extraction = Extraction(datetime.now(), '{}', WORKING)
+			self.extraction = Extraction(datetime.datetime.now(), '{}', WORKING)
 			self.transformation.extractions.append(self.extraction)
 		else:
-			self.extraction = Extraction(datetime.now(), self.extraction.context, WORKING)
+			self.extraction = Extraction(datetime.datetime.now(), self.extraction.context, WORKING)
 			self.transformation.extractions.append(self.extraction)
 
 		self.session.merge(self.transformation)
@@ -39,14 +39,14 @@ class ExtractionContext():
 		if new_context is not None:
 			self.update_context(new_context)
 
-		self.extraction.end_date = datetime.now()
+		self.extraction.end_date = datetime.datetime.now()
 		self.extraction.transformation_status = OK
 		self.extraction.comment = comment
 		self.session.merge(self.transformation)
 		self.session.commit()
 
 	def finish_error(self, comment):
-		self.extraction.end_date = datetime.now()
+		self.extraction.end_date = datetime.datetime.now()
 		self.extraction.transformation_status = ERROR
 		self.extraction.comment = comment
 		self.session.merge(self.transformation)
