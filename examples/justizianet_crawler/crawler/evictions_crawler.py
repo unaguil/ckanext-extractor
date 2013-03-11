@@ -49,7 +49,7 @@ class Crawler():
         return False
 
     def connection(self, url):
-        print 'Connecting to URL %s' % url
+        #print 'Connecting to URL %s' % url
         soup = None
         try:
             response = opener.open(url)
@@ -58,7 +58,7 @@ class Crawler():
             soup.prettify()
             return soup
         except:
-            print "ERROR accessing URL %s" % url
+        #   print "ERROR accessing URL %s" % url
             return None
 
     def processPages(self, evlisthtml, cpartido):
