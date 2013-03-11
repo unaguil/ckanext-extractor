@@ -35,10 +35,7 @@ class ExtractionContext():
 	def get_current_context(self):
 		return eval(self.extraction.context)
 
-	def finish_ok(self, comment, new_context=None):
-		if new_context is not None:
-			self.update_context(new_context)
-
+	def finish_ok(self, comment):
 		self.extraction.end_date = datetime.datetime.now()
 		self.extraction.transformation_status = OK
 		self.extraction.comment = comment
