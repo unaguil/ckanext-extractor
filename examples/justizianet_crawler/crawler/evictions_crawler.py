@@ -49,18 +49,16 @@ class Crawler():
         return False
 
     def connection(self, url):
-        #print "Connecting to... " + url
+        print 'Connecting to URL %s' % url
         soup = None
         try:
             response = opener.open(url)
             data = response.read()
             soup = BeautifulSoup(data, convertEntities=BeautifulSoup.HTML_ENTITIES)
             soup.prettify()
-            #print "Connection OK"
             return soup
         except:
-            print "ERROR accessing..."
-            print url
+            print "ERROR accessing URL %s" % url
             return None
 
     def processPages(self, evlisthtml, cpartido):
@@ -78,6 +76,7 @@ class Crawler():
 
                 #check if entry must be stored
                 if self.isAnImportantWord(title, importantworddict):
+                    print 'Storing to DB'
                     self.scrappEviction(cpartido=cpartido, url=detailsurl, title=title, cancelled=cancelled)
 
     def context_generator(self, extraction_context):
@@ -102,7 +101,7 @@ class Crawler():
 
     def scrappList(self, extraction_context):
         for cpartido, start_date, end_date in self.context_generator(extraction_context):
-            print ' * Downloading %s from %s to %s' % (cpartido, start_date, end_date)
+            print 'Downloading %s from %s to %s' % (cpartido, start_date, end_date)
             page = 1
             isfinalpage = False
             while not isfinalpage:
@@ -120,7 +119,7 @@ class Crawler():
             
                 page += self.pagination
 
-            print ' * Finished download of %s from %s to %s' % (cpartido, start_date, end_date)
+            print 'Finished download of %s from %s to %s' % (cpartido, start_date, end_date)
 
         extraction_context.finish_ok('Extraction correctly finished')
 
@@ -168,8 +167,6 @@ class Crawler():
                 evicdict[DIRECCION] = ''
 
             if cod_eviction in evicdict[PROCEDIMIENTO_JUDICIAL]:
-                print "Storing to DB --> %s" % url
-
                 day, month, year = evicdict[DIA].split('/')
                 hour, minute = evicdict[HORA].split(':')
      
@@ -214,11 +211,11 @@ class Crawler():
         engine = create_engine(db_connection, convert_unicode=True, pool_recycle=3600)
 
         #destroying database schema
-        print '* Dropping tables'
+        print 'Dropping tables'
         Base.metadata.drop_all(bind = engine)
 
         #creating database schema
-        print '* Creating tables'
+        print 'Creating tables'
         Base.metadata.create_all(bind = engine)
 
         #add municipality information
