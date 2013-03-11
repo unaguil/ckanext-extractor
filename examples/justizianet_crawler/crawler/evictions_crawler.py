@@ -76,7 +76,6 @@ class Crawler():
 
                 #check if entry must be stored
                 if self.isAnImportantWord(title, importantworddict):
-                    print 'Storing to DB'
                     self.scrappEviction(cpartido=cpartido, url=detailsurl, title=title, cancelled=cancelled)
 
     def context_generator(self, extraction_context):
@@ -167,6 +166,7 @@ class Crawler():
                 evicdict[DIRECCION] = ''
 
             if cod_eviction in evicdict[PROCEDIMIENTO_JUDICIAL]:
+                print "Storing to DB URL %s" % url
                 day, month, year = evicdict[DIA].split('/')
                 hour, minute = evicdict[HORA].split(':')
      
