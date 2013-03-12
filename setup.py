@@ -19,7 +19,8 @@ setup(
     namespace_packages=['ckanext', 'ckanext.extractor'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[],
+    install_requires=[
+        'celery==2.4.2',],
     entry_points=\
     """
     [ckan.plugins]
