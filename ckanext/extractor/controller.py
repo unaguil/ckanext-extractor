@@ -120,8 +120,8 @@ class ExtractorController(PackageController):
                 transformation.filename = request.params['transformation_code'].filename
                 submitted_file = request.params['transformation_code'].file
 
-                transformation_dir = self.extract_zip_file(transformation, submitted_file)
-                self.deploy_transformation(transformation_dir, transformation)
+                transformation.output_dir = self.extract_zip_file(transformation, submitted_file)
+                self.deploy_transformation(transformation)
             except Exception as e:
                 return self.render_error_messsage('Problem deploying uploaded file %s (%s)' % (transformation.filename, e))
 
@@ -138,8 +138,8 @@ class ExtractorController(PackageController):
         config.readfp(open('entry_point.txt'))
         return config.get('ckan-extractor', 'mainclass')
 
-    def deploy_transformation(self, transformation_dir, transformation):
-        transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
+    def deploy_transformation(self, transformation):
+        transformation_instance = self.get_instance(transformation.output_dir, self.get_main_class(transformation.output_dir))
         transformation_instance.create_db()
 
         #remove extraction log
@@ -190,12 +190,10 @@ class ExtractorController(PackageController):
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
 
-        #change to transformation directory
-        transformation_dir = os.path.join(self.get_transformations_dir(), package_info['id'])        
-        os.chdir(transformation_dir)
+        t = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
 
         celery.send_task("extractor.perform_extraction",
-            args=[transformation_dir, package_info['id'], self.get_main_class(transformation_dir)], task_id=str(uuid.uuid4()))        
+            args=[t.package_id, self.get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))        
 
         self.get_transformation_data(package_info['id'], c)
         c.error = False
