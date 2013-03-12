@@ -4,23 +4,23 @@ from ckan.lib.base import render, c, model, response
 from ckan.logic import get_action
 from logging import getLogger
 from ckan.controllers.package import PackageController
-from ckan.controllers.api import ApiController as BaseApiController
 from pylons import request
 
 import sys
 import os
 import os.path
 import shutil
-import threading
 import ConfigParser
 from zipfile import ZipFile
 from datetime import datetime
 
 from model.transformation_model import Transformation, Extraction
-from extraction.extraction_context import ExtractionContext, WORKING, ERROR, OK
+from extraction.extraction_context import WORKING
 
 import uuid
 from ckan.lib.celery_app import celery
+
+from utils import get_main_class, get_instance
 
 log = getLogger(__name__)
 
@@ -49,7 +49,7 @@ class ExtractorController(PackageController):
         log.info('Showing extractor configuration for package name: %s' % id)         
 
         # using default functionality
-        template = self.read(id)
+        self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -102,7 +102,7 @@ class ExtractorController(PackageController):
         log.info('Processing submitted transformation for package name: %s' % id)
 
          # using default functionality
-        template = self.read(id)
+        self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -132,14 +132,8 @@ class ExtractorController(PackageController):
         #rendering using default template
         return render('package/read.html')
 
-    def get_main_class(self, transformation_dir):
-        os.chdir(transformation_dir)
-        config = ConfigParser.ConfigParser()
-        config.readfp(open('entry_point.txt'))
-        return config.get('ckan-extractor', 'mainclass')
-
     def deploy_transformation(self, transformation):
-        transformation_instance = self.get_instance(transformation.output_dir, self.get_main_class(transformation.output_dir))
+        transformation_instance = get_instance(transformation.output_dir, get_main_class(transformation.output_dir))
         transformation_instance.create_db()
 
         #remove extraction log
@@ -151,7 +145,7 @@ class ExtractorController(PackageController):
         log.info('Dowloading transformation for package name: %s' % id)
 
         # using default functionality
-        template = self.read(id)
+        self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -167,25 +161,11 @@ class ExtractorController(PackageController):
 
             return transformation.data
 
-    def my_import(self, name):
-        module, clazz = name.split(':')
-        mod = __import__(module, fromlist = [''])
-        reload(mod)
-        return getattr(mod, clazz)
-
-    def get_instance(self, transformation_dir, mainclass):
-        sys.path.append(transformation_dir)
-        #import main class and instantiate transformation
-        clazz = self.my_import(mainclass)
-        transformation_instance = clazz()
-        sys.path.remove(transformation_dir)
-        return transformation_instance
-
     def launch_transformation(self, id):
         log.info('Launching transformation for package name: %s' % id)
 
         # using default functionality
-        template = self.read(id)
+        self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
@@ -193,7 +173,7 @@ class ExtractorController(PackageController):
         t = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
 
         celery.send_task("extractor.perform_extraction",
-            args=[t.package_id, self.get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))        
+            args=[t.package_id, get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))
 
         self.get_transformation_data(package_info['id'], c)
         c.error = False
@@ -205,7 +185,7 @@ class ExtractorController(PackageController):
         log.info('Showing message for extraction %s of package name: %s ' % (extraction_id, id))
 
         # using default functionality
-        template = self.read(id)
+        self.read(id)
 
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})

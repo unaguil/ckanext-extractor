@@ -1,6 +1,5 @@
 # -*- coding: utf8 -*- 
 
-import sys
 import os
 import traceback
 from logging import getLogger
@@ -17,8 +16,9 @@ from sqlalchemy.orm import sessionmaker
 
 from model.transformation_model import Transformation
 from extraction.extraction_context import ExtractionContext
-from celery.task.control import inspect
 from celery.task import periodic_task
+
+from utils import get_main_class, get_instance
 
 log = getLogger(__name__)
 
@@ -27,29 +27,9 @@ config = ConfigParser.ConfigParser()
 config.read(os.environ['CKAN_CONFIG'])
 
 SQLALCHEMY_URL = config.get('app:main', 'sqlalchemy.url')
-RUN_EVERY = 10
+RUN_EVERY = 120
 
 TRANSFORMATIONS_DIR = 'transformations'
-
-def my_import(name):
-        module, clazz = name.split(':')
-        mod = __import__(module, fromlist = [''])
-        reload(mod)
-        return getattr(mod, clazz)
-
-def get_instance(transformation_dir, mainclass):
-    sys.path.append(transformation_dir)
-    #import main class and instantiate transformation
-    clazz = my_import(mainclass)
-    transformation_instance = clazz()
-    sys.path.remove(transformation_dir)
-    return transformation_instance
-
-def get_main_class(transformation_dir):
-    os.chdir(transformation_dir)
-    config = ConfigParser.ConfigParser()
-    config.readfp(open('entry_point.txt'))
-    return config.get('ckan-extractor', 'mainclass')
 
 @celery.task(name="extractor.perform_extraction")
 def perform_extraction(package_id, mainclass):
@@ -85,6 +65,7 @@ def launch_transformations():
     transformations = session.query(Transformation).all()
 
     session.close()
-    
+
     for t in transformations:
+
         celery.send_task("extractor.perform_extraction", args=[t.package_id, get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))
