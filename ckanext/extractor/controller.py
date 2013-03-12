@@ -4,10 +4,10 @@ from ckan.lib.base import render, c, model, response
 from ckan.logic import get_action
 from logging import getLogger
 from ckan.controllers.package import PackageController
+from ckan.controllers.api import ApiController as BaseApiController
 from pylons import request
 
 import sys
-import traceback
 import os
 import os.path
 import shutil
@@ -18,6 +18,9 @@ from datetime import datetime
 
 from model.transformation_model import Transformation, Extraction
 from extraction.extraction_context import ExtractionContext, WORKING, ERROR, OK
+
+import uuid
+from ckan.lib.celery_app import celery
 
 log = getLogger(__name__)
 
@@ -191,15 +194,8 @@ class ExtractorController(PackageController):
         transformation_dir = os.path.join(self.get_transformations_dir(), package_info['id'])        
         os.chdir(transformation_dir)
 
-        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
-
-        #create context and call transformation entry point
-        context = ExtractionContext(transformation, model.Session)
-
-        log.info('Starting transformation %s' % transformation.package_id)
-        transformation_instance = self.get_instance(transformation_dir, self.get_main_class(transformation_dir))
-        t = ThreadClass(transformation_instance, context)
-        t.start()
+        celery.send_task("extractor.perform_extraction",
+            args=[transformation_dir, package_info['id'], self.get_main_class(transformation_dir)], task_id=str(uuid.uuid4()))        
 
         self.get_transformation_data(package_info['id'], c)
         c.error = False
@@ -225,18 +221,49 @@ class ExtractorController(PackageController):
 
         #render template
         return render('extractor/comment.html')
-        
-class ThreadClass(threading.Thread):
 
-    def __init__(self, transformation_instance, context):
-        threading.Thread.__init__(self)
-        self.transformation_instance = transformation_instance
-        self.context = context
+class ApiController(BaseApiController):
 
-    def run(self):
-        try: 
-            self.transformation_instance.start_transformation(self.context)
-        except:
-            comment = traceback.format_exc()
-            self.context.finish_error(comment)
-            log.info(comment)
+    def update_context(self):
+        error_400_msg = 'Please provide a suitable package_id parameter'
+
+        request = self._get_request_data()
+
+        if not 'package_id' in request:
+            abort(400,error_400_msg)
+
+        log.info("Updating properties for package %s" % request['package_id'])
+        for key, value in request.items():
+            if not key == 'package_id':
+                property = Property(request['package_id'], key, value)
+                model.Session.merge(property)
+
+        model.Session.commit()
+
+        return self._finish_ok({})
+
+    def update_vocabulary_count(self):
+        log.info('Updating vocabulary count')
+
+        vocab_count = {}
+
+        vocab_properties = model.Session.query(Property).filter_by(key='vocabularies').all()
+        for property in vocab_properties:
+            vocabularies = eval(property.value)
+            for vocabulary in vocabularies:
+                if vocabulary not in vocab_count:
+                    vocab_count[vocabulary] = 0
+                else:
+                    vocab_count[vocabulary] += 1
+
+        for property in vocab_properties:
+            package_vocabularies = eval(property.value)
+            for vocabulary in package_vocabularies:
+                if vocabulary in vocab_count:
+                    package_vocabularies[vocabulary] = vocab_count[vocabulary]
+
+            property.value = str(package_vocabularies)
+
+        model.Session.commit()
+
+        return self._finish_ok({})

@@ -24,5 +24,8 @@ setup(
     """
     [ckan.plugins]
         extractor=ckanext.extractor.plugin:ExtractorExtension
+
+    [ckan.celery_task]
+        tasks = ckanext.extractor.celery_import:task_imports
     """,
 )
