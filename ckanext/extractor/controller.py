@@ -57,10 +57,7 @@ class ExtractorController(PackageController):
         # using default functionality
         self.read(id)
 
-        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
-        package_info = get_action('package_show')(context, {'id': c.pkg.id})
-
-        self.get_transformation_data(package_info['id'], c)
+        self.get_transformation_data(c.pkg.id, c)
 
         c.error = False
 
@@ -110,12 +107,9 @@ class ExtractorController(PackageController):
          # using default functionality
         self.read(id)
 
-        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
-        package_info = get_action('package_show')(context, {'id': c.pkg.id})
-
-        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
+        transformation = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
         if transformation is None:
-            transformation = Transformation(package_info['id'])
+            transformation = Transformation(c.pkg.id)
         else:
             #read enabled status of transformation
             transformation.minute = request.params['minute']
@@ -169,9 +163,6 @@ class ExtractorController(PackageController):
         # using default functionality
         self.read(id)
 
-        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
-        package_info = get_action('package_show')(context, {'id': c.pkg.id})
-
         transformation = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
         if transformation is not None:
             response.status_int = 200
@@ -189,15 +180,12 @@ class ExtractorController(PackageController):
         # using default functionality
         self.read(id)
 
-        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
-        package_info = get_action('package_show')(context, {'id': c.pkg.id})
-
-        t = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
+        t = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
 
         celery.send_task("extractor.perform_extraction",
             args=[t.package_id, get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))
 
-        self.get_transformation_data(package_info['id'], c)
+        self.get_transformation_data(c.pkg.id, c)
         c.error = False
 
         #rendering using template
@@ -209,10 +197,7 @@ class ExtractorController(PackageController):
         # using default functionality
         self.read(id)
 
-        context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
-        package_info = get_action('package_show')(context, {'id': c.pkg.id})
-
-        extraction = model.Session.query(Extraction).filter_by(transformation_id=package_info['id'], id=extraction_id).first()
+        extraction = model.Session.query(Extraction).filter_by(transformation_id=c.pkg.id, id=extraction_id).first()
 
         if extraction.transformation_status == WORKING:
             c.comment = 'Context: %s' % extraction.context
