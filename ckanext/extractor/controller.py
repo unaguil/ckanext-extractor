@@ -104,7 +104,7 @@ class ExtractorController(PackageController):
         log.info('File %s extracted' % transformation.filename)
         return package_dir
 
-    def extract_transformation(self, id):
+    def submit_transformation(self, id):
         log.info('Processing submitted transformation for package name: %s' % id)
 
          # using default functionality
