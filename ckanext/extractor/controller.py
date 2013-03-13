@@ -150,6 +150,19 @@ class ExtractorController(PackageController):
         model.Session.merge(transformation)
         model.Session.commit()
 
+    def perform_deploy(self, id):
+        log.info('Deploying transformation for package name: %s' % id)
+
+        # using default functionality
+        self.read(id)
+
+        transformation = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
+        if transformation:
+            self.deploy_transformation(transformation)
+
+        #rendering using default template
+        return render('package/read.html')
+
     def download_transformation(self, id):
         log.info('Dowloading transformation for package name: %s' % id)
 
@@ -159,7 +172,7 @@ class ExtractorController(PackageController):
         context = {'model': model, 'session': model.Session, 'user': c.user or c.author}
         package_info = get_action('package_show')(context, {'id': c.pkg.id})
 
-        transformation = model.Session.query(Transformation).filter_by(package_id=package_info['id']).first()
+        transformation = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
         if transformation is not None:
             response.status_int = 200
             response.headers['Content-Type'] = 'application/octet-stream'

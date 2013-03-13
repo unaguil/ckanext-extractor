@@ -11,6 +11,7 @@ py:strip=""
       <!-- One button for each fieldset -->
       <li class="active"><a data-toggle="tab" href="#transformation-deployment">Transformation Deployment</a></li>
       <li><a data-toggle="tab" href="#execution-log">Execution Log</a></li>
+      <li><a data-toggle="tab" href="#perform-deploy">Re-deploy</a></li>
       <li><a data-toggle="tab" href="#launch-transformation">Launch Transformation</a></li>
     </ul>
     <form class="tab-content form-horizontal" id="dataset-edit"
@@ -42,7 +43,7 @@ py:strip=""
         </div>
 
         <div class="control-group">
-          <label class="control-label">Time Stamp</label>
+          <label class="control-label">Submission Timestamp</label>
           <div class="controls">
             ${c.timestamp}          
           </div>
@@ -63,8 +64,12 @@ py:strip=""
       <div class="form-actions">
         <input class="btn btn-primary" type="submit" name="submit" value="Submit" />
         <input id="cancel" class="btn href-action" name="button" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
-        <p><b>Warning!</b> Transformation will be redeployed after submission. This could
-          cause previously extracted data removal. Check transformation behaviour.</p>
+        <br/>
+        <br/>
+        <p>Deployment of transformation will always cause <b>log removal</b>.</p>
+        <p><b>Warning!</b> Transformation will be deployed after submission.
+          This could cause previously extracted data to be removed. Check 
+          transformation behaviour.</p>
       </div>
 
       <py:if test="c.error">
@@ -92,6 +97,17 @@ py:strip=""
             </py:for>
           </tbody>
         </table>
+      </py:if>
+    </fieldset>
+
+    <fieldset class="tab-pane" id="perform-deploy">
+      <py:if test="c.data">
+          <p>Re-deployment of transformation will always cause <b>log removal</b>.</p>
+          <p><b>Warning!</b> Re-deployment could cause previously extracted data
+          to be removed. Check transformation behaviour.</p>
+          <br/>
+          <br/>
+          <input class="btn btn-primary href-action" type="button" name="submit" value="Deploy transformation" action="/dataset/extractor/${c.pkg.name}/perform_deploy"/>
       </py:if>
     </fieldset>
 

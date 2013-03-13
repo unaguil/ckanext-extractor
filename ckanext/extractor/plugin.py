@@ -70,5 +70,9 @@ class ExtractorExtension(SingletonPlugin):
             controller='ckanext.extractor.controller:ExtractorController',
             action='show_message')
 
+        map.connect('/dataset/extractor/{id}/perform_deploy',
+            controller='ckanext.extractor.controller:ExtractorController',
+            action='perform_deploy')
+
         return map
         
