@@ -41,9 +41,15 @@ class ExtractorController(PackageController):
             data.filename = transformation.filename
             data.enabled = transformation.enabled
             data.extractions = transformation.extractions
+            data.hour = transformation.hour
+            data.minute = transformation.minute
+            data.day_of_week = transformation.day_of_week
             data.data = True
         else:
             data.data = False
+            data.minute = '59'
+            data.hour = '23'
+            data.day_of_week = '*'
         
     def show_extractor_config(self, id):
         log.info('Showing extractor configuration for package name: %s' % id)         
@@ -112,6 +118,9 @@ class ExtractorController(PackageController):
             transformation = Transformation(package_info['id'])
         else:
             #read enabled status of transformation
+            transformation.minute = request.params['minute']
+            transformation.hour = request.params['hour']
+            transformation.day_of_week = request.params['day_of_week']
             transformation.enabled = 'enabled' in request.params
             
         #read submitted file

@@ -4,6 +4,7 @@ import os
 import traceback
 from logging import getLogger
 from datetime import timedelta
+from datetime import datetime
 
 import uuid
 
@@ -17,6 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from model.transformation_model import Transformation
 from extraction.extraction_context import ExtractionContext
 from celery.task import periodic_task
+from celery.schedules import crontab
 
 from utils import get_main_class, get_instance
 
@@ -27,7 +29,7 @@ config = ConfigParser.ConfigParser()
 config.read(os.environ['CKAN_CONFIG'])
 
 SQLALCHEMY_URL = config.get('app:main', 'sqlalchemy.url')
-RUN_EVERY = 120
+RUN_EVERY_SECONDS = 10
 
 TRANSFORMATIONS_DIR = 'transformations'
 
@@ -56,9 +58,16 @@ def perform_extraction(package_id, mainclass):
 
     session.close()
 
-@periodic_task(run_every=timedelta(seconds=int(RUN_EVERY)))
+def must_run(minute, hour, day_of_week):
+    cron_tab = crontab(minute=minute, hour=hour, day_of_week=day_of_week)
+    total_seconds = cron_tab.remaining_estimate(datetime.now()).total_seconds()
+    print 'Total seconds', total_seconds
+    return total_seconds < RUN_EVERY_SECONDS
+
+
+@periodic_task(run_every=timedelta(seconds=int(RUN_EVERY_SECONDS)))
 def launch_transformations():
-    log.info('Running periodic task')
+    log.info('Checking transformation crontabs')
     engine = create_engine(SQLALCHEMY_URL, convert_unicode=True, pool_recycle=3600)
     session = sessionmaker(bind = engine)()
 
@@ -67,5 +76,7 @@ def launch_transformations():
     session.close()
 
     for t in transformations:
-
-        celery.send_task("extractor.perform_extraction", args=[t.package_id, get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))
+        if must_run(t.minute, t.hour, t.day_of_week):
+            celery.send_task("extractor.perform_extraction",
+                args=[t.package_id, get_main_class(t.output_dir)],
+                task_id=str(uuid.uuid4()))

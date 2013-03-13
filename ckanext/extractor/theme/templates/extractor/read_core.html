@@ -18,6 +18,21 @@ py:strip=""
     action="/dataset/extractor/${c.pkg.name}/transformation_submit">
     
     <fieldset class="tab-pane" id="transformation-deployment">
+
+      <div class="control-group">
+        <label class="control-label">Crontab</label>
+        <div class="input-prepend">
+          <label class="control-label">M</label>
+          <input size="2" name="minute" type="text" class="js-url-input" value="${c.minute}" />
+
+          <label class="control-label">H</label>
+          <input size="2" name="hour" type="text" class="js-url-input" value="${c.hour}" />
+
+          <label class="control-label">D</label>
+          <input size="2" name="day_of_week" type="text" class="js-url-input" value="${c.day_of_week}" />
+        </div>
+      </div>
+
       <py:if test="c.data">      
         <div class="control-group">
           <label class="control-label">File Name</label>
