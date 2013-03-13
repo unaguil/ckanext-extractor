@@ -61,7 +61,6 @@ def perform_extraction(package_id, mainclass):
 def must_run(minute, hour, day_of_week):
     cron_tab = crontab(minute=minute, hour=hour, day_of_week=day_of_week)
     total_seconds = cron_tab.remaining_estimate(datetime.now()).total_seconds()
-    print 'Total seconds', total_seconds
     return total_seconds < RUN_EVERY_SECONDS
 
 
