@@ -20,7 +20,7 @@ from extraction.extraction_context import ExtractionContext
 from celery.task import periodic_task
 from celery.schedules import crontab
 
-from utils import get_main_class, get_instance
+from utils import get_instance, get_config_data
 
 log = getLogger(__name__)
 
@@ -58,11 +58,20 @@ def perform_extraction(package_id, mainclass):
 
     session.close()
 
+@celery.task(name="extractor.install_dependencies")
+def install_dependencies(required):
+    log.info('Installing dependencies %s' % required)
+    if len(required) > 0:
+        required_str = ''
+        for r in required:
+            required_str += r + ' '
+
+        os.system('pip install %s' % required_str)
+
 def must_run(minute, hour, day_of_week):
     cron_tab = crontab(minute=minute, hour=hour, day_of_week=day_of_week)
     total_seconds = cron_tab.remaining_estimate(datetime.now()).total_seconds()
     return total_seconds < RUN_EVERY_SECONDS
-
 
 @periodic_task(run_every=timedelta(seconds=int(RUN_EVERY_SECONDS)))
 def launch_transformations():
@@ -76,6 +85,6 @@ def launch_transformations():
 
     for t in transformations:
         if must_run(t.minute, t.hour, t.day_of_week):
+            mainclass, _ = get_config_data(t.output_dir)
             celery.send_task("extractor.perform_extraction",
-                args=[t.package_id, get_main_class(t.output_dir)],
-                task_id=str(uuid.uuid4()))
+                args=[t.package_id, mainclass], task_id=str(uuid.uuid4()))

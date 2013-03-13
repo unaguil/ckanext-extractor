@@ -1,6 +1,9 @@
 import sys
 import os
 import ConfigParser
+import ast
+
+SETUP_FILE = 'setup.txt'
 
 def my_import(name):
         module, clazz = name.split(':')
@@ -16,8 +19,10 @@ def get_instance(transformation_dir, mainclass):
     sys.path.remove(transformation_dir)
     return transformation_instance
 
-def get_main_class(transformation_dir):
+def get_config_data(transformation_dir):
     os.chdir(transformation_dir)
     config = ConfigParser.ConfigParser()
-    config.readfp(open('entry_point.txt'))
-    return config.get('ckan-extractor', 'mainclass')
+    config.readfp(open(SETUP_FILE))
+    mainclass = config.get('ckan-extractor', 'mainclass')
+    install_requires = ast.literal_eval(config.get('ckan-extractor', 'install_requires'))
+    return mainclass, install_requires

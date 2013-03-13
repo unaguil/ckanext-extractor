@@ -1,16 +1,13 @@
 # -*- coding: utf8 -*- 
 
 from ckan.lib.base import render, c, model, response
-from ckan.logic import get_action
 from logging import getLogger
 from ckan.controllers.package import PackageController
 from pylons import request
 
-import sys
 import os
 import os.path
 import shutil
-import ConfigParser
 from zipfile import ZipFile
 from datetime import datetime
 
@@ -20,7 +17,7 @@ from extraction.extraction_context import WORKING
 import uuid
 from ckan.lib.celery_app import celery
 
-from utils import get_main_class, get_instance
+from utils import get_config_data, get_instance
 
 log = getLogger(__name__)
 
@@ -136,8 +133,13 @@ class ExtractorController(PackageController):
         return render('package/read.html')
 
     def deploy_transformation(self, transformation):
-        transformation_instance = get_instance(transformation.output_dir, get_main_class(transformation.output_dir))
+        mainclass, required = get_config_data(transformation.output_dir)
+        transformation_instance = get_instance(transformation.output_dir, mainclass)
         transformation_instance.create_db()
+
+        #install depedencies using celery
+        celery.send_task("extractor.install_dependencies",
+            args=[required], task_id=str(uuid.uuid4()))
 
         #remove extraction log
         transformation.extractions = []
@@ -182,8 +184,9 @@ class ExtractorController(PackageController):
 
         t = model.Session.query(Transformation).filter_by(package_id=c.pkg.id).first()
 
+        mainclass, _ = get_config_data(t.output_dir)
         celery.send_task("extractor.perform_extraction",
-            args=[t.package_id, get_main_class(t.output_dir)], task_id=str(uuid.uuid4()))
+            args=[t.package_id, mainclass], task_id=str(uuid.uuid4()))
 
         self.get_transformation_data(c.pkg.id, c)
         c.error = False
