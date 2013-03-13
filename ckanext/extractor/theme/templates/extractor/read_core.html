@@ -63,6 +63,8 @@ py:strip=""
       <div class="form-actions">
         <input class="btn btn-primary" type="submit" name="submit" value="Submit" />
         <input id="cancel" class="btn href-action" name="button" type="reset" value="Cancel" action="/dataset/${c.pkg.name}" />
+        <p><b>Warning!</b> Transformation will be redeployed after submission. This could
+          cause previously extracted data removal. Check transformation behaviour.</p>
       </div>
 
       <py:if test="c.error">
