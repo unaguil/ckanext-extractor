@@ -204,7 +204,7 @@ class Crawler():
         self.session.commit()
         self.session.close()
 
-    def create_db(self):
+    def deploy(self):
         configParser = ConfigParser()
         configParser.read('crawler.cfg')
         db_connection = configParser.get('database', 'db_connection')

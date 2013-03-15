@@ -135,7 +135,7 @@ class ExtractorController(PackageController):
     def deploy_transformation(self, transformation):
         mainclass, required = get_config_data(transformation.output_dir)
         transformation_instance = get_instance(transformation.output_dir, mainclass)
-        transformation_instance.create_db()
+        transformation_instance.deploy()
 
         #install depedencies using celery
         celery.send_task("extractor.install_dependencies",

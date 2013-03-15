@@ -33,11 +33,11 @@ RUN_EVERY_SECONDS = 10
 
 TRANSFORMATIONS_DIR = 'transformations'
 
+engine = create_engine(SQLALCHEMY_URL, convert_unicode=True, pool_recycle=3600)
+session = sessionmaker(bind = engine)()
+
 @celery.task(name="extractor.perform_extraction")
 def perform_extraction(package_id, mainclass):
-    engine = create_engine(SQLALCHEMY_URL, convert_unicode=True, pool_recycle=3600)
-    session = sessionmaker(bind = engine)()
-
     t = session.query(Transformation).filter_by(package_id=package_id).first()
 
     #change to transformation directory
@@ -55,8 +55,6 @@ def perform_extraction(package_id, mainclass):
         comment = traceback.format_exc()
         context.finish_error(comment)
         log.info(comment)
-
-    session.close()
 
 @celery.task(name="extractor.install_dependencies")
 def install_dependencies(required):
@@ -76,12 +74,8 @@ def must_run(minute, hour, day_of_week):
 @periodic_task(run_every=timedelta(seconds=int(RUN_EVERY_SECONDS)))
 def launch_transformations():
     log.info('Checking transformation crontabs')
-    engine = create_engine(SQLALCHEMY_URL, convert_unicode=True, pool_recycle=3600)
-    session = sessionmaker(bind = engine)()
 
     transformations = session.query(Transformation).all()
-
-    session.close()
 
     for t in transformations:
         if must_run(t.minute, t.hour, t.day_of_week):
