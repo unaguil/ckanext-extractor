@@ -15,3 +15,7 @@ Tested with CKAN 1.8
 **Update CKAN development.ini file to load the plugin**
 
     ckan.plugins = stats extractor
+    
+**Initialize new tables on CKAN database (Change user & pass)**
+
+    python ckanext/extractor/model/initDB.py
