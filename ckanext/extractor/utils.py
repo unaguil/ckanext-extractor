@@ -3,7 +3,7 @@ import os
 import ConfigParser
 import ast
 
-SETUP_FILE = 'setup.txt'
+SETUP_FILE = 'manifest.mf'
 
 def my_import(name):
         module, clazz = name.split(':')
