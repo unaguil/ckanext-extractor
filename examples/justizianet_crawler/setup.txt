@@ -1,3 +1,3 @@
 [ckan-extractor]
 mainclass = crawler.evictions_crawler:Crawler
-install_requires = ('celery==2.4.2',)
+install_requires = ('sqlalchemy', 'simplejson', 'BeautifulSoup')
