@@ -19,18 +19,22 @@ py:strip=""
     action="/dataset/extractor/${c.pkg.name}/transformation_submit">
     
     <fieldset class="tab-pane fade in active" id="transformation-deployment">
-
+        
       <div class="control-group">
         <label class="control-label">Crontab</label>
-        <div class="input-prepend">
-          <label class="control-label">M</label>
-          <input size="2" name="minute" type="text" class="js-url-input" value="${c.minute}" />
-
-          <label class="control-label">H</label>
-          <input size="2" name="hour" type="text" class="js-url-input" value="${c.hour}" />
-
-          <label class="control-label">D</label>
-          <input size="2" name="day_of_week" type="text" class="js-url-input" value="${c.day_of_week}" />
+        <div class="controls">
+          <label>
+            <span class="extras-label">M</span>
+            <input size="2" name="minute" type="text" class="js-url-input" value="${c.minute}" />
+          </label>
+          <label>
+            <span class="extras-label">H</span>
+            <input size="2" name="hour" type="text" class="js-url-input" value="${c.hour}" />
+          </label>
+          <label>
+            <span class="extras-label">D</span>
+            <input size="2" name="day_of_week" type="text" class="js-url-input" value="${c.day_of_week}" />
+          </label>
         </div>
       </div>
 
