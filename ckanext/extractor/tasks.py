@@ -96,7 +96,8 @@ def clear_running_tasks():
     session.query(RunningTask).delete()
     
 def remove_task(task_name):
-    session.query(RunningTask).delete(task_name=task_name)
+    print 'Removed running task %s' % task_name
+    session.query(RunningTask).filter_by(task_name=task_name).delete()
 
 @periodic_task(run_every=timedelta(seconds=int(RUN_EVERY_SECONDS)))
 def launch_transformations():    
