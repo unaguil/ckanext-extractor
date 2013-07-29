@@ -79,7 +79,6 @@ def must_run(minute, hour, day_of_week):
     total_seconds = cron_tab.remaining_estimate(datetime.now()).total_seconds()
     return total_seconds < RUN_EVERY_SECONDS
     
-@celery.task(name='extractor.is_running')
 def is_running(task_name):
     return session.query(RunningTask).filter_by(task_name=task_name).first() is not None
     

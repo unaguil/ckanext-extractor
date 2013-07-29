@@ -118,10 +118,7 @@ py:strip=""
     <fieldset class="tab-pane fade" id="launch-transformation">
       <py:if test="c.data">
         <h3>For testing purposes only</h3>
-          <py:choose>
-            <input py:when="c.running"  disabled="disabled" class="btn btn-primary href-action" type="button" name="submit" value="Launch transformation" action="/dataset/extractor/${c.pkg.name}/transformation_launch" />
-            <input py:otherwise="" class="btn btn-primary href-action" type="button" name="submit" value="Launch transformation" action="/dataset/extractor/${c.pkg.name}/transformation_launch"/>
-          </py:choose>
+          <input class="btn btn-primary href-action" type="button" name="submit" value="Launch transformation" action="/dataset/extractor/${c.pkg.name}/transformation_launch"/>
       </py:if>
     </fieldset>
   </form>
