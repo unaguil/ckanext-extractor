@@ -42,6 +42,9 @@ class ExtractorController(PackageController):
             data.minute = transformation.minute
             data.day_of_week = transformation.day_of_week
             data.data = True
+            
+            result = celery.send_task("extractor.is_running", ['extractor.perform_extraction_' + id])
+            data.running = result.get()
         else:
             data.data = False
             data.minute = '59'
