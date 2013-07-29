@@ -61,6 +61,8 @@ def perform_extraction(package_id, mainclass):
             comment = traceback.format_exc()
             context.finish_error(comment)
             log.info(comment)
+            
+        remove_task(full_task_id)
     else:
         print 'Extraction task is already running %s' % full_task_id
 
@@ -92,6 +94,9 @@ def add_task(task_name):
 def clear_running_tasks():
     print 'Cleaning old running tasks'
     session.query(RunningTask).delete()
+    
+def remove_task(task_name):
+    session.query(RunningTask).delete(task_name=task_name)
 
 @periodic_task(run_every=timedelta(seconds=int(RUN_EVERY_SECONDS)))
 def launch_transformations():    
