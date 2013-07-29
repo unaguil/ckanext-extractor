@@ -55,3 +55,17 @@ class Extraction(Base):
 
     def __repr__(self):
         return '<Extraction transformation_id: %s start_date: %s end_date: %s context: %s transformation_status: %s>' % (self.transformation.package_id, self.start_date, self.end_date, self.context, self.transformation_status)
+
+class RunningTask(Base):
+    __tablename__ = 'RunningTasks'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_name = Column(String)
+    start_time = Column(DateTime)
+    
+    def __init__(self, task_name, start_time):
+        self.task_name = task_name
+        self.start_time = start_time
+        
+    def __repr__(self):
+        return '<RunningTask id: %s task_name: %s start_time: %s>' % (self.id, self.task_name, self.start_time)
